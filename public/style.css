@@ -229,6 +229,15 @@ div.logo img {
 	border: var(--thin-border);
 }
 
+p.box {
+	white-space: pre-wrap;
+	font-style: italic;
+	padding: 8px 12px;
+	border: var(--thin-border);
+	box-shadow: var(--drop-shadow);
+	background-color: var(--color-text);
+}
+
 /* TABLES */
 
 table {

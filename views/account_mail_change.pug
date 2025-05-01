@@ -11,12 +11,16 @@ html
 			if flash
 				p.error= flash
 
-			form(method="post" action="/change-mail")
+			form(method="post")
 				p Name: #{user.name}
 				p Mail: #{user.mail}
 				p
 					label New mail address:
 						br
 						input(type="text" name="newmail" required)
+				p
+					label Password:
+						br
+						input(type="password" name="password" required)
 				p
 					button(type="submit") Change mail

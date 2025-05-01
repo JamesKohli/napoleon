@@ -19,7 +19,7 @@ html
 				tbody
 					each row in ratings
 						tr
-							td= row.name
+							td <a class="black" href="/stats/user/#{row.name}">#{row.name}</a>
 							td.r= row.rating
 							td.r= row.count
 							td.r= row.last

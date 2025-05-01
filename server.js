@@ -340,6 +340,12 @@ function format_minutes(mins) {
 	return mins + " minutes"
 }
 
+function is_valid_password(password) {
+	if (password.length < 4 || password.length > 100)
+		return false
+	return true
+}
+
 function is_valid_email(email) {
 	return REGEX_MAIL.test(email)
 }
@@ -370,6 +376,14 @@ function hash_password(password, salt) {
 	hash.update(password)
 	hash.update(salt)
 	return hash.digest("hex")
+}
+
+function verify_password(user, password) {
+	var user_login = SQL_SELECT_LOGIN.get(user.user_id)
+	var hash  = hash_password(password, user_login.salt)
+	if (hash !== user_login.password)
+		return false
+	return true
 }
 
 /*
@@ -462,6 +476,7 @@ const SQL_SELECT_USER_DYNAMIC = SQL("select * from user_dynamic_view where user_
 const SQL_SELECT_USER_ID = SQL("SELECT user_id FROM users WHERE name=?").pluck()
 const SQL_SELECT_USER_BY_SEARCH = SQL("select name, atime from users left join user_last_seen using(user_id) where name like ? order by name")
 
+const SQL_SELECT_USER_ABOUT = SQL("SELECT about FROM user_about WHERE user_id=?").pluck()
 const SQL_SELECT_USER_NOTIFY = SQL("SELECT notify FROM users WHERE user_id=?").pluck()
 const SQL_SELECT_USER_VERIFIED = SQL("SELECT is_verified FROM users WHERE user_id=?").pluck()
 const SQL_UPDATE_USER_NOTIFY = SQL("UPDATE users SET notify=? WHERE user_id=?")
@@ -495,7 +510,7 @@ app.use(function (req, res, next) {
 		let user_id = login_sql_select.get(sid)
 		if (user_id) {
 			login_touch(res, sid)
-			req.user = SQL_SELECT_USER_DYNAMIC.get(user_id)
+			req.user = res.locals.user = SQL_SELECT_USER_DYNAMIC.get(user_id)
 			SQL_UPDATE_USER_LAST_SEEN.run(user_id, ip)
 			if (req.user.is_banned)
 				return res.status(403).send("")
@@ -524,15 +539,15 @@ function must_be_administrator(req, res, next) {
 }
 
 app.get("/", function (req, res) {
-	res.render("index.pug", { user: req.user })
+	res.render("index.pug")
 })
 
 app.get("/create", function (req, res) {
-	res.render("create-index.pug", { user: req.user })
+	res.render("create_index.pug")
 })
 
 app.get("/about", function (req, res) {
-	res.render("about.pug", { user: req.user })
+	res.render("about.pug")
 })
 
 app.post("/logout", function (req, res) {
@@ -560,7 +575,7 @@ app.post("/login", must_pass_altcha, function (req, res) {
 	if (!user || is_forbidden_mail(user.mail) || hash_password(password, user.salt) != user.password)
 		return setTimeout(() => res.render("login.pug", { flash: "Invalid login." }), 1000)
 	login_insert(res, user.user_id)
-	res.redirect(redirect || "/profile")
+	res.redirect(redirect || "/account")
 })
 
 app.get("/signup", function (req, res) {
@@ -596,92 +611,70 @@ app.post("/signup", must_pass_altcha, function (req, res) {
 	SQL_UPDATE_USER_FIRST_SEEN.run(user.user_id, ip)
 	SQL_UPDATE_USER_PASSWORD.run(user.user_id, hash, salt)
 	login_insert(res, user.user_id)
-	res.redirect("/profile")
+	res.redirect("/account")
 })
 
-function create_and_mail_verification_token(user) {
-	if (!SQL_FIND_TOKEN.get(user.user_id))
-		mail_verification_token(user, SQL_CREATE_TOKEN.get(user.user_id))
-}
-
-app.get("/verify-mail", must_be_logged_in, function (req, res) {
+app.get("/account/mail/verify", must_be_logged_in, function (req, res) {
 	if (SQL_SELECT_USER_VERIFIED.get(req.user.user_id))
-		return res.redirect("/profile")
-	create_and_mail_verification_token(req.user)
-	res.render("verify_mail.pug", { user: req.user })
+		return res.redirect("/account")
+	var sent_token = SQL_FIND_TOKEN.get(req.user.user_id)
+	var input_token = req.query.token
+	res.render("account_mail_verify.pug", { input_token, sent_token })
 })
 
-app.get("/verify-mail/:token", must_be_logged_in, function (req, res) {
-	if (SQL_SELECT_USER_VERIFIED.get(req.user.user_id))
-		return res.redirect("/profile")
-	res.render("verify_mail.pug", { user: req.user, token: req.params.token })
+app.post("/account/mail/verify-send", must_be_logged_in, function (req, res) {
+	if (!SQL_FIND_TOKEN.get(req.user.user_id))
+		mail_verification_token(req.user, SQL_CREATE_TOKEN.get(req.user.user_id))
+	res.redirect("/account/mail/verify")
 })
 
-app.post("/verify-mail", must_be_logged_in, function (req, res) {
+app.post("/account/mail/verify", must_be_logged_in, function (req, res) {
 	if (SQL_VERIFY_TOKEN.get(req.user.user_id, req.body.token)) {
 		SQL_UPDATE_USER_VERIFIED.run(1, req.user.user_id)
-		res.redirect("/profile")
+		res.redirect("/account")
 	} else {
-		create_and_mail_verification_token(req.user)
-		res.render("verify_mail.pug", { user: req.user, flash: "Invalid or expired token!" })
+		var sent_token = SQL_FIND_TOKEN.get(req.user.user_id)
+		res.render("account_mail_verify.pug", { sent_token, flash: "Invalid or expired token!" })
 	}
 })
 
-app.get("/forgot-password", function (req, res) {
+app.get("/account/password/forgot", function (req, res) {
 	if (req.user)
 		return res.redirect("/")
-	res.render("forgot_password.pug")
+	res.render("account_password_forgot.pug")
 })
 
-app.post("/forgot-password", must_pass_altcha, function (req, res) {
+app.post("/account/password/forgot", must_pass_altcha, function (req, res) {
 	let mail = req.body.mail
 	let user = SQL_SELECT_LOGIN_BY_MAIL.get(mail)
 	if (user) {
-		let token = SQL_FIND_TOKEN.get(user.user_id)
-		if (!token) {
-			token = SQL_CREATE_TOKEN.get(user.user_id)
-			mail_password_reset_token(user, token)
-		}
-		return res.redirect("/reset-password/" + mail)
+		var token = SQL_CREATE_TOKEN.get(user.user_id)
+		mail_password_reset_token(user, token)
+		return res.redirect("/account/password/reset?mail=" + mail)
 	}
-	res.render("forgot_password.pug", { flash: "User not found." })
+	res.render("account_password_forgot.pug", { flash: "User not found." })
 })
 
-app.get("/reset-password", function (req, res) {
+app.get("/account/password/reset", function (req, res) {
 	if (req.user)
 		return res.redirect("/")
-	res.render("reset_password.pug", { mail: "", token: "" })
+	var mail = req.query.mail
+	var token = req.query.token
+	res.render("account_password_reset.pug", { mail, token })
 })
 
-app.get("/reset-password/:mail", function (req, res) {
-	if (req.user)
-		return res.redirect("/")
-	let mail = req.params.mail
-	res.render("reset_password.pug", { mail: mail, token: "" })
-})
-
-app.get("/reset-password/:mail/:token", function (req, res) {
-	if (req.user)
-		return res.redirect("/")
-	let mail = req.params.mail
-	let token = req.params.token
-	res.render("reset_password.pug", { mail: mail, token: token })
-})
-
-app.post("/reset-password", function (req, res) {
+app.post("/account/password/reset", function (req, res) {
 	let mail = req.body.mail
 	let token = req.body.token
 	let password = req.body.password
 	function err(msg) {
-		res.render("reset_password.pug", { mail: mail, token: token, flash: msg })
+		res.render("account_password_reset.pug", { mail: mail, token: token, flash: msg })
 	}
 	let user = SQL_SELECT_LOGIN_BY_MAIL.get(mail)
 	if (!user)
 		return err("User not found.")
-	if (password.length < 4)
-		return err("Password is too short!")
-	if (password.length > 100)
-		return err("Password is too long!")
+	if (!is_valid_password(password))
+		return err("New password is invalid!")
 	if (!SQL_VERIFY_TOKEN.get(user.user_id, token))
 		return err("Invalid or expired token!")
 	let salt = crypto.randomBytes(32).toString("hex")
@@ -689,29 +682,26 @@ app.post("/reset-password", function (req, res) {
 	SQL_UPDATE_USER_PASSWORD.run(user.user_id, hash, salt)
 	SQL_UPDATE_USER_VERIFIED.run(1, user.user_id)
 	login_insert(res, user.user_id)
-	return res.redirect("/profile")
+	return res.redirect("/account")
 })
 
-app.get("/change-password", must_be_logged_in, function (req, res) {
-	res.render("change_password.pug", { user: req.user })
+app.get("/account/password/change", must_be_logged_in, function (req, res) {
+	res.render("account_password_change.pug")
 })
 
-app.post("/change-password", must_be_logged_in, function (req, res) {
+app.post("/account/password/change", must_be_logged_in, function (req, res) {
 	let oldpass = req.body.password
 	let newpass = req.body.newpass
 	// Get full user record including password and salt
 	let user = SQL_SELECT_LOGIN.get(req.user.user_id)
-	if (newpass.length < 4)
-		return res.render("change_password.pug", { user: req.user, flash: "Password is too short!" })
-	if (newpass.length > 100)
-		return res.render("change_password.pug", { user: req.user, flash: "Password is too long!" })
-	let oldhash = hash_password(oldpass, user.salt)
-	if (oldhash !== user.password)
-		return res.render("change_password.pug", { user: req.user, flash: "Wrong password!" })
+	if (!is_valid_password(newpass))
+		return res.render("account_password_change.pug", { flash: "New password is invalid!" })
+	if (!verify_password(req.user, oldpass))
+		return res.render("account_password_change.pug", { flash: "Wrong password!" })
 	let salt = crypto.randomBytes(32).toString("hex")
 	let hash = hash_password(newpass, salt)
 	SQL_UPDATE_USER_PASSWORD.run(user.user_id, hash, salt)
-	return res.redirect("/profile")
+	return res.redirect("/account")
 })
 
 const SQL_SELECT_MAY_DELETE_ACCOUNT = SQL(`
@@ -726,17 +716,17 @@ function may_delete_account(user_id) {
 	return true
 }
 
-app.get("/delete-account", must_be_logged_in, function (req, res) {
+app.get("/account/delete", must_be_logged_in, function (req, res) {
 	if (!may_delete_account(req.user.user_id))
 		return res.status(401).send("You may not delete your account while you have unfinished games.")
-	res.render("delete_account.pug", { user: req.user })
+	res.render("account_delete.pug")
 })
 
 const SQL_SELECT_GAME_ROLE_FOR_DELETED_USER = SQL(`
 	select game_id, role from players where user_id = ? and game_id in (select game_id from games where status <= 1)
 `)
 
-app.post("/delete-account", must_be_logged_in, function (req, res) {
+app.post("/account/delete", must_be_logged_in, function (req, res) {
 	if (!may_delete_account(req.user.user_id))
 		res.status(401).send("You may not delete your account while you have unfinished games.")
 
@@ -745,7 +735,7 @@ app.post("/delete-account", must_be_logged_in, function (req, res) {
 	let user = SQL_SELECT_LOGIN.get(req.user.user_id)
 	let hash = hash_password(password, user.salt)
 	if (hash !== user.password)
-		return res.render("delete_account.pug", { user: req.user, flash: "Wrong password!" })
+		return res.render("account_delete.pug", { flash: "Wrong password!" })
 
 	let list = SQL_SELECT_GAME_ROLE_FOR_DELETED_USER.all(req.user.user_id)
 	for (let item of list)
@@ -771,27 +761,27 @@ app.get("/admin/unban-user/:who", must_be_administrator, function (req, res) {
  * USER PROFILE
  */
 
-app.get("/subscribe", must_be_logged_in, function (req, res) {
+app.get("/account/mail/subscribe", must_be_logged_in, function (req, res) {
 	SQL_UPDATE_USER_NOTIFY.run(1, req.user.user_id)
-	res.redirect("/profile")
+	res.redirect("/account")
 })
 
-app.get("/unsubscribe", must_be_logged_in, function (req, res) {
+app.get("/account/mail/unsubscribe", must_be_logged_in, function (req, res) {
 	SQL_UPDATE_USER_NOTIFY.run(0, req.user.user_id)
-	res.redirect("/profile")
+	res.redirect("/account")
 })
 
-app.get("/webhook", must_be_logged_in, function (req, res) {
+app.get("/account/webhook", must_be_logged_in, function (req, res) {
 	let webhook = SQL_SELECT_WEBHOOK.get(req.user.user_id)
-	res.render("webhook.pug", { user: req.user, webhook: webhook })
+	res.render("account_webhook.pug", { webhook: webhook })
 })
 
-app.post("/api/webhook/delete", must_be_logged_in, function (req, res) {
+app.post("/account/webhook/delete", must_be_logged_in, function (req, res) {
 	SQL_DELETE_WEBHOOK.run(req.user.user_id)
-	res.redirect("/webhook")
+	res.redirect("/account/webhook")
 })
 
-app.post("/api/webhook/update", must_be_logged_in, function (req, res) {
+app.post("/account/webhook/update", must_be_logged_in, function (req, res) {
 	let url = req.body.url
 	let prefix = req.body.prefix
 	let format = req.body.format
@@ -799,47 +789,52 @@ app.post("/api/webhook/update", must_be_logged_in, function (req, res) {
 	const webhook = SQL_SELECT_WEBHOOK_SEND.get(req.user.user_id)
 	if (webhook)
 		send_webhook(req.user.user_id, webhook, "Test message!", 0)
-	res.setHeader("refresh", "3; url=/webhook")
+	res.setHeader("refresh", "3; url=/account/webhook")
 	res.send("Testing Webhook. Please wait...")
 })
 
-app.get("/change-name", must_be_logged_in, function (req, res) {
-	res.render("change_name.pug", { user: req.user })
+app.get("/account/change-name", must_be_logged_in, function (req, res) {
+	res.render("account_change_name.pug")
 })
 
-app.post("/change-name", must_be_logged_in, function (req, res) {
+app.post("/account/change-name", must_be_logged_in, function (req, res) {
 	let newname = clean_user_name(req.body.newname)
 	if (!is_valid_user_name(newname))
-		return res.render("change_name.pug", { user: req.user, flash: "Invalid user name!" })
+		return res.render("account_change_name.pug", { flash: "Invalid user name!" })
 	if (SQL_EXISTS_USER_NAME.get(newname))
-		return res.render("change_name.pug", { user: req.user, flash: "That name is already taken!" })
+		return res.render("account_change_name.pug", { flash: "That name is already taken!" })
+	if (!verify_password(req.user, req.body.password))
+		return res.render("account_change_name.pug", { flash: "Wrong password!" })
 	SQL_UPDATE_USER_NAME.run(newname, req.user.user_id)
-	return res.redirect("/profile")
+	return res.redirect("/account")
 })
 
-app.get("/change-mail", must_be_logged_in, function (req, res) {
-	res.render("change_mail.pug", { user: req.user })
+app.get("/account/mail/change", must_be_logged_in, function (req, res) {
+	res.render("account_mail_change.pug")
 })
 
-app.post("/change-mail", must_be_logged_in, function (req, res) {
+app.post("/account/mail/change", must_be_logged_in, function (req, res) {
 	let newmail = req.body.newmail
 	if (!is_valid_email(newmail) || is_forbidden_mail(newmail))
-		return res.render("change_mail.pug", { user: req.user, flash: "Invalid mail address!" })
+		return res.render("account_mail_change.pug", { flash: "Invalid mail address!" })
 	if (SQL_EXISTS_USER_MAIL.get(newmail))
-		return res.render("change_mail.pug", { user: req.user, flash: "That mail address is already taken!" })
+		return res.render("account_mail_change.pug", { flash: "That mail address is already taken!" })
+	if (!verify_password(req.user, req.body.password))
+		return res.render("account_mail_change.pug", { flash: "Wrong password!" })
 	SQL_UPDATE_USER_MAIL.run(newmail, req.user.user_id)
 	SQL_UPDATE_USER_VERIFIED.run(0, req.user.user_id)
-	return res.redirect("/profile")
+	SQL_UPDATE_USER_NOTIFY.run(0, req.user.user_id)
+	return res.redirect("/account")
 })
 
-app.get("/change-about", must_be_logged_in, function (req, res) {
-	let about = SQL_SELECT_USER_PROFILE.get(req.user.name).about
-	res.render("change_about.pug", { user: req.user, about: about || "" })
+app.get("/account/change-about", must_be_logged_in, function (req, res) {
+	let about = SQL_SELECT_USER_ABOUT.get(req.user.user_id)
+	res.render("account_change_about.pug", { about })
 })
 
-app.post("/change-about", must_be_logged_in, function (req, res) {
+app.post("/account/change-about", must_be_logged_in, function (req, res) {
 	SQL_UPDATE_USER_ABOUT.run(req.user.user_id, req.body.about)
-	return res.redirect("/profile")
+	return res.redirect("/account")
 })
 
 app.get("/user/:who_name", function (req, res) {
@@ -881,7 +876,7 @@ const SQL_SELECT_RELATION = SQL("select relation from contacts where me=? and yo
 
 app.get("/contacts", must_be_logged_in, function (req, res) {
 	let contacts = SQL_SELECT_CONTACT_LIST.all(req.user.user_id)
-	res.render("contacts.pug", {
+	res.render("contacts_index.pug", {
 		user: req.user,
 		friends: contacts.filter(user => user.relation > 0),
 		enemies: contacts.filter(user => user.relation < 0),
@@ -916,13 +911,13 @@ app.get("/contacts/search", must_be_logged_in, function (req, res) {
 		if (!q.includes("%"))
 			q = "%" + q + "%"
 		let results = SQL_SELECT_USER_BY_SEARCH.all(q)
-		res.render("search_user.pug", {
+		res.render("contacts_search.pug", {
 			user: req.user,
 			search: req.query.q,
 			results
 		})
 	} else {
-		res.render("search_user.pug", {
+		res.render("contacts_search.pug", {
 			user: req.user,
 			search: null,
 			results: null,
@@ -1255,7 +1250,7 @@ app.get("/forum/search", must_be_logged_in, function (req, res) {
 			results = FORUM_SEARCH.all('"' + search.replaceAll('"', '""') + '"')
 		}
 	}
-	res.render("forum_search.pug", { user: req.user, search, results })
+	res.render("forum_search.pug", { search, results })
 })
 
 /*
@@ -1693,11 +1688,18 @@ function annotate_games(list, user_id, unread, unseen) {
 	return list
 }
 
-app.get("/profile", must_be_logged_in, function (req, res) {
-	req.user.notify = SQL_SELECT_USER_NOTIFY.get(req.user.user_id)
-	req.user.is_verified = SQL_SELECT_USER_VERIFIED.get(req.user.user_id)
-	req.user.webhook = SQL_SELECT_WEBHOOK.get(req.user.user_id)
-	res.render("profile.pug", { user: req.user })
+// compatibility redirects
+app.get("/profile", function (req, res) { res.redirect(301, "/account") })
+
+app.get("/account", must_be_logged_in, function (req, res) {
+	var who = SQL_SELECT_USER_PROFILE.get(req.user.name)
+	var mail = {
+		notify: SQL_SELECT_USER_NOTIFY.get(req.user.user_id),
+		is_verified: SQL_SELECT_USER_VERIFIED.get(req.user.user_id)
+	}
+	var webhook = SQL_SELECT_WEBHOOK.get(req.user.user_id)
+	var ratings = SQL_USER_RATINGS.all(req.user.user_id)
+	res.render("account_index.pug", { who, mail, webhook, ratings })
 })
 
 app.get("/games", function (_req, res) {
@@ -1725,7 +1727,7 @@ app.get("/games/active", must_be_logged_in, function (req, res) {
 	let active_pools = TM_POOL_LIST_USER_ACTIVE.all(user_id)
 	let finished_pools = TM_POOL_LIST_USER_RECENT_FINISHED.all(user_id)
 
-	res.render("games_active.pug", { user: req.user, who: req.user, games, seeds, active_pools, finished_pools })
+	res.render("games_active.pug", { who: req.user, games, seeds, active_pools, finished_pools })
 })
 
 app.get("/tm/active", must_be_logged_in, function (req, res) {
@@ -1733,7 +1735,7 @@ app.get("/tm/active", must_be_logged_in, function (req, res) {
 	let seeds = TM_SEED_LIST_USER.all(user_id)
 	let active_pools = TM_POOL_LIST_USER_ACTIVE.all(user_id)
 	let finished_pools = TM_POOL_LIST_USER_RECENT_FINISHED.all(user_id)
-	res.render("tm_active.pug", { user: req.user, who: req.user, seeds, active_pools, finished_pools })
+	res.render("tm_active.pug", { who: req.user, seeds, active_pools, finished_pools })
 })
 
 app.get("/games/finished", must_be_logged_in, function (req, res) {
@@ -1741,12 +1743,12 @@ app.get("/games/finished", must_be_logged_in, function (req, res) {
 	let unread = SQL_SELECT_UNREAD_CHAT_GAMES.all(req.user.user_id)
 	let unseen = SQL_SELECT_UNSEEN_GAME_LIST.all(req.user.user_id)
 	annotate_games(games, req.user.user_id, unread, unseen)
-	res.render("games_finished.pug", { user: req.user, who: req.user, games })
+	res.render("games_finished.pug", { who: req.user, games })
 })
 
 app.get("/tm/finished", must_be_logged_in, function (req, res) {
 	let pools = TM_POOL_LIST_USER_ALL_FINISHED.all(req.user.user_id)
-	res.render("tm_finished.pug", { user: req.user, who: req.user, pools })
+	res.render("tm_finished.pug", { who: req.user, pools })
 })
 
 app.get("/games/finished/:who_name", function (req, res) {
@@ -1754,7 +1756,7 @@ app.get("/games/finished/:who_name", function (req, res) {
 	if (who) {
 		let games = QUERY_LIST_FINISHED_GAMES_OF_USER.all({ user_id: who.user_id })
 		annotate_games(games, 0, null, null)
-		res.render("games_finished.pug", { user: req.user, who, games })
+		res.render("games_finished.pug", { who, games })
 	} else {
 		return res.status(404).send("Invalid user name.")
 	}
@@ -1764,7 +1766,7 @@ app.get("/tm/finished/:who_name", function (req, res) {
 	let who = SQL_SELECT_USER_BY_NAME.get(req.params.who_name)
 	if (who) {
 		let pools = TM_POOL_LIST_USER_ALL_FINISHED.all(who.user_id)
-		res.render("tm_finished.pug", { user: req.user, who, pools })
+		res.render("tm_finished.pug", { who, pools })
 	} else {
 		return res.status(404).send("Invalid user name.")
 	}
@@ -1826,7 +1828,7 @@ function get_title_page(req, res, title_id) {
 	let active_pools = TM_POOL_LIST_TITLE_ACTIVE.all(title_id)
 	let finished_pools = TM_POOL_LIST_TITLE_FINISHED.all(title_id)
 
-	res.render("info.pug", {
+	res.render("title.pug", {
 		user: req.user,
 		title: title,
 		open_games,
@@ -1847,7 +1849,7 @@ app.get("/create/:title_id", function (req, res) {
 	let title = TITLE_TABLE[title_id]
 	if (!title)
 		return res.status(404).send("Invalid title.")
-	res.render("create.pug", {
+	res.render("create_title.pug", {
 		user: req.user,
 		title: title,
 		limit: req.user ? check_create_game_limit(req.user) : null,
@@ -2476,7 +2478,7 @@ function mail_password_reset_token(user, token) {
 		let subject = "Password reset request"
 		let body =
 			"Your password reset token is: " + token + "\n\n" +
-			SITE_URL + "/reset-password/" + user.mail + "/" + token + "\n"
+			SITE_URL + "/account/password/reset?mail=" + user.mail + "&token=" + token + "\n"
 		console.log("SENT MAIL:", mail_addr(user), subject)
 		mailer.sendMail({ from: MAIL_FROM, to: mail_addr(user), subject: subject, text: body }, mail_callback)
 	}
@@ -2487,7 +2489,7 @@ function mail_verification_token(user, token) {
 		let subject = "Verify mail address"
 		let body =
 			"Your mail verification token is: " + token + "\n\n" +
-			SITE_URL + "/verify-mail/" + token + "\n"
+			SITE_URL + "/account/mail/verify?token=" + token + "\n"
 		console.log("SENT MAIL:", mail_addr(user), subject)
 		mailer.sendMail({ from: MAIL_FROM, to: mail_addr(user), subject: subject, text: body }, mail_callback)
 	}
@@ -3156,7 +3158,7 @@ const TM_SELECT_SEED_READY_MINI_CUP = SQL(`
 
 app.get("/tm/list", function (req, res) {
 	let seeds = TM_SEED_LIST_ALL.all(req.user ? req.user.user_id : 0)
-	res.render("tm_list.pug", { user: req.user, seeds })
+	res.render("tm_list.pug", { seeds })
 })
 
 app.get("/tm/seed/:seed_name", function (req, res) {
@@ -3185,7 +3187,7 @@ app.get("/tm/seed/:seed_name", function (req, res) {
 			may_register = true
 	}
 
-	res.render("tm_seed.pug", { user: req.user, error, may_register, seed, queues, active_pools, finished_pools })
+	res.render("tm_seed.pug", { error, may_register, seed, queues, active_pools, finished_pools })
 })
 
 app.get("/tm/pool/:pool_name", function (req, res) {
@@ -3203,10 +3205,10 @@ app.get("/tm/pool/:pool_name", function (req, res) {
 		players = TM_SELECT_PLAYERS_MP.all(pool_id)
 	let games = TM_SELECT_GAMES.all(pool_id)
 	let games_by_round = object_group_by(games, "round")
-	res.render("tm_pool.pug", { user: req.user, seed, pool, roles, players, games, games_by_round })
+	res.render("tm_pool.pug", { seed, pool, roles, players, games, games_by_round })
 })
 
-app.post("/api/tm/register/:seed_id/:level", must_be_logged_in, function (req, res) {
+app.post("/tm/register/:seed_id/:level", must_be_logged_in, function (req, res) {
 	let seed_id = req.params.seed_id | 0
 	let level = req.params.level | 0
 	let user_id = req.user.user_id
@@ -3222,7 +3224,7 @@ app.post("/api/tm/register/:seed_id/:level", must_be_logged_in, function (req, r
 	return res.redirect(req.headers.referer)
 })
 
-app.post("/api/tm/withdraw/:seed_id/:level", must_be_logged_in, function (req, res) {
+app.post("/tm/withdraw/:seed_id/:level", must_be_logged_in, function (req, res) {
 	let seed_id = req.params.seed_id | 0
 	let level = req.params.level | 0
 	let user_id = req.user.user_id
@@ -3230,7 +3232,7 @@ app.post("/api/tm/withdraw/:seed_id/:level", must_be_logged_in, function (req, r
 	return res.redirect(req.headers.referer)
 })
 
-app.post("/api/tm/start/:seed_id/:level", must_be_administrator, function (req, res) {
+app.post("/tm/start/:seed_id/:level", must_be_administrator, function (req, res) {
 	let seed_id = req.params.seed_id | 0
 	let level = req.params.level | 0
 	start_tournament_seed(seed_id, level)
@@ -4172,7 +4174,7 @@ app.get("/stats", function (req, res) {
 		row.result_role = row.result_role.split("%")
 		row.result_count = row.result_count.split("%").map(Number)
 	})
-	res.render("stats.pug", {
+	res.render("stats_index.pug", {
 		user: req.user,
 		stats: stats,
 	})
@@ -4237,23 +4239,23 @@ const SQL_GAME_RATINGS = SQL(`
 	limit 50
 	`)
 
-app.get("/user-stats/:who_name", must_be_administrator, function (req, res) {
+app.get("/stats/user/:who_name", must_be_administrator, function (req, res) {
 	let who = SQL_SELECT_USER_BY_NAME.get(req.params.who_name)
 	if (who) {
 		let stats = SQL_USER_STATS.all(who.user_id, who.user_id)
 		let ratings = SQL_USER_RATINGS.all(who.user_id)
-		res.render("user_stats.pug", { user: req.user, who, stats, ratings })
+		res.render("stats_user.pug", { who, stats, ratings })
 	} else {
 		return res.status(404).send("Invalid user name.")
 	}
 })
 
-app.get("/game-stats/:title_id", must_be_administrator, function (req, res) {
+app.get("/stats/title/:title_id", must_be_administrator, function (req, res) {
 	let title_id = req.params.title_id
 	if (title_id in TITLE_TABLE) {
 		let title_name = TITLE_NAME[title_id]
 		let ratings = SQL_GAME_RATINGS.all(title_id)
-		res.render("game_stats.pug", { user: req.user, title_name, ratings })
+		res.render("stats_title.pug", { title_name, ratings })
 	} else {
 		return res.status(404).send("Invalid title.")
 	}

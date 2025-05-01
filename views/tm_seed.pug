@@ -67,11 +67,11 @@ html
 
 					if user
 						if queue.find(p => p.user_id === user.user_id)
-							form(method="post" action="/api/tm/withdraw/" + seed.seed_id + "/" + (ix+1))
+							form(method="post" action="/tm/withdraw/" + seed.seed_id + "/" + (ix+1))
 								button(disabled) Register
 								button(type="submit") Withdraw
 						else if may_register && may_join_seed_level(user.user_id, seed.seed_id, ix+1)
-							form(method="post" action="/api/tm/register/" + seed.seed_id + "/" + (ix+1))
+							form(method="post" action="/tm/register/" + seed.seed_id + "/" + (ix+1))
 								button(type="submit") Register
 								button(disabled) Withdraw
 						else
@@ -81,7 +81,7 @@ html
 
 						if user.user_id === 1
 							if queue.length >= seed.pool_size
-								form(method="post" action="/api/tm/start/" + seed.seed_id + "/" + (ix+1))
+								form(method="post" action="/tm/start/" + seed.seed_id + "/" + (ix+1))
 									button(type="submit") Start
 					else
 						p <a href="/login">Login</a> or <a href="/signup">sign up</a> to register.

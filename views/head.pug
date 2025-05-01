@@ -212,3 +212,36 @@ mixin tourlist(seeds, pools, fin)
 					+poollist(pools, "Active", TM_ICON_ACTIVE)
 				div
 					+poollist(fin, "Finished", TM_ICON_FINISHED)
+
+mixin userstats(who, ratings)
+		if (who.move_time_mean !== null)
+			h3 Response time
+			div Average response time: #{format_minutes(who.move_time_mean)}
+			if (who.move_time_q2 !== null)
+				div Median response time: #{format_minutes(who.move_time_q2)}
+			if (who.move_time_q1 !== null && who.move_time_q2 !== null)
+				div Middle half of response times: #{format_minutes(who.move_time_q1)} to #{format_minutes(who.move_time_q3)}
+
+		h3 Timeouts
+		div Total number of timeouts: #{who.timeout_total}
+		div Games completed since last timeout: #{who.games_since_timeout}
+
+		if ratings.length > 0
+			h3 Most played games
+			table
+				thead
+					tr
+						th Title
+						th Count
+						th Last played
+						if user && user.user_id === 1
+							th Elo
+				tbody
+					each row in ratings
+						tr
+							td
+								a.black(href="/" + row.title_id)= row.title_name
+							td.r= row.count
+							td.r= row.last
+							if user && user.user_id === 1
+								td.r= row.rating

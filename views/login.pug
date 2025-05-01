@@ -12,14 +12,14 @@ html
 			if flash
 				p.error= flash
 
-			if redirect
-				p You need to be logged in to view this page!
-				p Log in below, or <a href="/signup">sign up</a> for a free account.
-
 			if user
 				p You're already logged in!
 			else
-				form(method="post" action="/login")
+				if redirect
+					p You need to be logged in to view this page!
+					p Log in below, or <a href="/signup">sign up</a> for a free account.
+
+				form(method="post")
 					input(type="hidden" name="redirect" value=redirect)
 					p
 						label Name or mail:
@@ -33,4 +33,4 @@ html
 					p
 						button(type="submit") Login
 				p
-					a(href="/forgot-password") Forgot password
+					a(href="/account/password/forgot") Forgot password
