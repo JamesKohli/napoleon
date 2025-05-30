@@ -1,7 +1,10 @@
 # https://lobste.rs/s/ybowdq/great_gpt_firewall
+# https://github.com/kurren/ai-bots-crawlers
+User-agent: AI2Bot
 User-agent: Ai2Bot-Dolma
 User-agent: Ai2bot
 User-agent: Amazonbot
+User-agent: AnthropicAI
 User-agent: Applebot
 User-agent: Applebot-Extended
 User-agent: Bytespider
@@ -10,21 +13,44 @@ User-agent: ChatGPT-User
 User-agent: Claude-Web
 User-agent: ClaudeBot
 User-agent: Cohere-ai
+User-agent: Crawlspace
 User-agent: Diffbot
+User-agent: DuckAssistBot
 User-agent: FacebookBot
+User-agent: FriendlyCrawler
 User-agent: GPTBot
 User-agent: Google-Extended
+User-agent: GoogleOther
+User-agent: GoogleOther-Image
+User-agent: GoogleOther-Video
+User-agent: ICC-Crawler
+User-agent: ISSCyberRiskCrawler
+User-agent: ImagesiftBot
+User-agent: Kangaroo Bot
 User-agent: Meta-ExternalAgent
+User-agent: Meta-ExternalFetcher
 User-agent: OAI-SearchBot
 User-agent: Omgili
 User-agent: Omgilibot
+User-agent: OpenAI
 User-agent: PanguBot
 User-agent: PerplexityBot
 User-agent: PetalBot
+User-agent: Scrapy
+User-agent: SemrushBot-OCOB
+User-agent: SemrushBot-SWA
+User-agent: Sidetrade indexer bot
+User-agent: Sogou
 User-agent: Timpibot
+User-agent: VelenPublicWebCrawler
 User-agent: Webzio-Extended
 User-agent: YouBot
 User-agent: anthropic-ai
+User-agent: cohere-training-data-crawler
+User-agent: iaskspider/2.0
+User-agent: img2dataset
+User-agent: omgili
+User-agent: omgilibot
 Disallow: /
 
 # SEO/spam tools
@@ -42,10 +68,15 @@ User-agent: SplitSignalBot
 Disallow: /
 
 User-agent: *
-Disallow: /join
 Disallow: /login
 Disallow: /signup
-Disallow: /forum
+Disallow: /account
 Disallow: /user
+Disallow: /forum
 Disallow: /games
+Disallow: /tm
+Disallow: /stats
+Disallow: /join
+Disallow: /api
+Disallow: /altcha-challenge
 Disallow: /*play*
