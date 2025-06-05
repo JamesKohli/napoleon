@@ -228,10 +228,16 @@ function _run() {
 			if (typeof prog === "function") {
 				prog()
 			} else if (Array.isArray(prog)) {
-				if (L.I < prog.length)
-					prog[L.I++]()
-				else
+				if (L.I < prog.length) {
+					try {
+						prog[L.I++]()
+					} catch (err) {
+						err.message += "\n\tat P." + L.P + ":" + L.I
+						throw err
+					}
+				} else {
 					end()
+				}
 			} else {
 				throw new Error("invalid procedure: P." + L.P)
 			}
@@ -510,8 +516,15 @@ function script(text) {
 		var prog = P[name]
 		if (typeof prog === "string")
 			errors.push("P." + name + ": " + prog)
+		if (typeof prog === "object" && !Array.isArray(prog))
+			errors.push("P." + name + " is not a script or function")
 		if (S[name])
 			errors.push("P." + name + " shadows S." + name)
+	}
+	for (var name in S) {
+		prog = S[name]
+		if (typeof prog !== "object" || Array.isArray(prog))
+			errors.push("S." + name + " is not a state object")
 	}
 	if (errors.length > 0)
 		throw new Error("script errors found:\n\t" + errors.join("\n\t"))
