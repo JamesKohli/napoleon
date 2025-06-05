@@ -194,6 +194,7 @@ function fuzz(input) {
 			if (typeof rules.assert === "function")
 				rules.assert(G)
 		} catch (e) {
+			ctx.state = prev_G
 			return log_crash(e, ctx, action)
 		}
 
