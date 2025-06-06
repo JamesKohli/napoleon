@@ -34,9 +34,8 @@ The framework uses several global variables that must be defined near the top of
 
 	var G, L, R, V
 
-You also need to define the states and procedures tables.
+You also need to define the states and procedures table.
 
-	const S = {}
 	const P = {}
 
 The rules need a list of player roles. The index of each role in the array determines their numeric value.
@@ -177,11 +176,11 @@ and end pops the stack.
 
 ## States
 
-The "states" where we wait for user input are kept in the S table.
+The "states" where we wait for user input are also kept in the P table.
 
 Each state is an object that provides several functions.
 
-	S.place_piece = {
+	P.place_piece = {
 		prompt() {
 			prompt("Select a piece to move.")
 			for (var s = 0; s < 64; ++s)
@@ -200,7 +199,7 @@ Each state is an object that provides several functions.
 		},
 	}
 
-### S.state.prompt()
+### P.state.prompt()
 
 The prompt function is called for each active player to generate a list of
 valid actions.
@@ -231,7 +230,7 @@ reduce the risk of introducing typos.
 
 > Note: The on_view function should NEVER change any game state!
 
-### S.state.action()
+### P.state.action()
 
 When a player chooses a valid action, the function with the action name is
 invoked!
@@ -248,14 +247,14 @@ Calling log with no arguments inserts a blank line:
 
 	log()
 
-### S.state._begin() and _resume() and _end()
+### P.state._begin() and _resume() and _end()
 
 These functions are invoked when the state is first entered, when control returns
 to the state (from a nested state), and when the state is departed.
 
 You can use this to do some house-keeping or initialize the L scope.
 
-	S.remove_3_pieces = {
+	P.remove_3_pieces = {
 		_begin() {
 			L.count = 3
 		},
@@ -344,7 +343,7 @@ returns, either via "goto" or "end".
 
 It's also a neat way to define events; to dispatch based on a string.
 
-	S.strategy_phase = {
+	P.strategy_phase = {
 		...
 		play_event(c) {
 			goto(data.events[c].event)

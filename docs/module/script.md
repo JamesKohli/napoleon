@@ -131,7 +131,7 @@ Example:
 Use return (or the end() function in states and function procedures) to
 pass information up the call chain.
 
-	S.greeting = {
+	P.greeting = {
 		prompt() {
 			button("hello")
 			button("goodbye")

@@ -4,7 +4,7 @@
 "use strict"
 const ROLES = []
 const SCENARIOS = []
-var G, L, R, V, S = {}, P = {}
+var G, L, R, V, P = {}
 function on_setup(scenario, options) {}
 function on_view() {}
 function on_query(q) {}
@@ -51,21 +51,21 @@ function call_or_goto(pred, name, env) {
 
 function call(name, env) {
 	G.L = L = { ...env, P: name, I: 0, L: L }
-	S[name]?._begin?.()
+	P[name]?._begin?.()
 }
 
 function goto(name, env) {
-	S[L.P]?._end?.()
+	P[L.P]?._end?.()
 	G.L = L = { ...env, P: name, I: 0, L: L.L }
-	S[name]?._begin?.()
+	P[name]?._begin?.()
 }
 
 function end(result) {
-	S[L.P]?._end?.()
+	P[L.P]?._end?.()
 	G.L = L = L.L
 	if (result !== undefined)
 		L.$ = result
-	S[L.P]?._resume?.()
+	P[L.P]?._resume?.()
 }
 
 exports.roles ??= ROLES
@@ -105,8 +105,8 @@ exports.view = function (state, role) {
 
 		V.actions = {}
 
-		if (S[L.P])
-			S[L.P].prompt()
+		if (P[L.P])
+			P[L.P].prompt()
 		else
 			V.prompt = "TODO: " + L.P
 
@@ -122,7 +122,7 @@ exports.view = function (state, role) {
 		if (G.active === "None") {
 			V.prompt = L.message
 		} else {
-			var inactive = S[L.P]?.inactive
+			var inactive = P[L.P]?.inactive
 			if (inactive) {
 				if (Array.isArray(G.active))
 					V.prompt = `Waiting for ${G.active.join(" and ")} to ${inactive}.`
@@ -150,7 +150,7 @@ exports.action = function (state, role, action, argument) {
 
 	_load()
 
-	var this_state = S[L.P]
+	var this_state = P[L.P]
 	if (this_state && typeof this_state[action] === "function") {
 		this_state[action](argument)
 		_run()
@@ -224,25 +224,21 @@ function _save() {
 function _run() {
 	for (var i = 0; i < 1000 && L; ++i) {
 		var prog = P[L.P]
-		if (prog) {
-			if (typeof prog === "function") {
-				prog()
-			} else if (Array.isArray(prog)) {
-				if (L.I < prog.length) {
-					try {
-						prog[L.I++]()
-					} catch (err) {
-						err.message += "\n\tat P." + L.P + ":" + L.I
-						throw err
-					}
-				} else {
-					end()
+		if (typeof prog === "function") {
+			prog()
+		} else if (Array.isArray(prog)) {
+			if (L.I < prog.length) {
+				try {
+					prog[L.I++]()
+				} catch (err) {
+					err.message += "\n\tat P." + L.P + ":" + L.I
+					throw err
 				}
 			} else {
-				throw new Error("invalid procedure: P." + L.P)
+				end()
 			}
 		} else {
-			return
+			return // state
 		}
 	}
 	if (L)
@@ -492,42 +488,30 @@ function _parse(text) {
 }
 
 function script(text) {
-	script.cache ??= {}
-	var prog = []
-	try {
-		for (var inst of _parse(text)) {
-			try {
-				prog.push(script.cache[inst] ??= eval("(function(){" + inst + "})"))
-			} catch (err) {
-				return err.message + " - " + inst
-			}
-		}
-	} catch (err) {
-		return err.message
-	}
-	return prog
+	return text
 }
 
-(function () {
-	script.cache = null
-	// catch and report delayed error messages
-	var errors = []
+(function _compile() {
+	var cache = {}
 	for (var name in P) {
-		var prog = P[name]
-		if (typeof prog === "string")
-			errors.push("P." + name + ": " + prog)
-		if (typeof prog === "object" && !Array.isArray(prog))
-			errors.push("P." + name + " is not a script or function")
-		if (S[name])
-			errors.push("P." + name + " shadows S." + name)
+		if (typeof P[name] === "string") {
+			var prog = []
+			try {
+				for (var inst of _parse(P[name])) {
+					try {
+						prog.push(cache[inst] ??= eval("(function(){" + inst + "})"))
+					} catch (err) {
+						err.message += "\n\tat (" + inst + ")"
+						throw err
+					}
+				}
+			} catch (err) {
+				err.message += "\n\tat P." + name
+				throw err
+			}
+			P[name] = prog
+		}
 	}
-	for (var name in S) {
-		prog = S[name]
-		if (typeof prog !== "object" || Array.isArray(prog))
-			errors.push("S." + name + " is not a state object")
-	}
-	if (errors.length > 0)
-		throw new Error("script errors found:\n\t" + errors.join("\n\t"))
 })()
 
 /* LIBRARY */
