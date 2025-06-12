@@ -263,9 +263,12 @@ function patch_game(game_id, {validate_actions=true, save_snaps=true, delete_und
 
 		if (need_to_rewrite) {
 			delete_replay.run(game_id)
-			for (let item of replay)
-				if (!item.remove)
-					insert_replay.run(game_id, item.replay_id, item.role, item.action, item.arguments)
+			let replay_id = 0
+			for (let item of replay) {
+				if (!item.remove) {
+					insert_replay.run(game_id, replay_id++, item.role, item.action, item.arguments)
+				}
+			}
 		}
 
 		if (save_snaps) {
