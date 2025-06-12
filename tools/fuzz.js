@@ -6,6 +6,7 @@ const crypto = require("node:crypto")
 var MAX_TIMEOUT = parseInt(process.env.MAX_TIMEOUT || 250)
 var MAX_ERRORS = parseInt(process.env.MAX_ERRORS || 100)
 var MAX_STEPS = parseInt(process.env.MAX_STEPS || 10000)
+var DEAD_END_UNDO = parseInt(process.env.DEAD_END_UNDO || 0)
 var TITLE = process.env.TITLE
 var SCENARIO = process.env.SCENARIO
 var scenarios
@@ -96,11 +97,15 @@ function list_roles(scenario, options) {
 
 function list_actions(R, V) {
 	var actions = []
+	var undo = null
 	if (V.actions) {
 		for (var act in V.actions) {
 			var arg = V.actions[act]
-			if (act === "undo" || act === "ping") {
-				// never undo
+			if (act === "undo") {
+				// never undo, unless it's our only action
+				if (DEAD_END_UNDO && (arg === 1 || arg === true))
+					undo = [ R, "undo" ]
+			} else if (act === "ping") {
 				// never ping
 			} else if (arg === 0 || arg === false) {
 				// disabled button
@@ -121,6 +126,8 @@ function list_actions(R, V) {
 				throw new Error("invalid action: " + act + " " + arg)
 			}
 		}
+		if (DEAD_END_UNDO && actions.length === 0 && undo)
+			actions.push(undo)
 	}
 	return actions
 }
