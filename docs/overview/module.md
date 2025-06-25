@@ -278,7 +278,7 @@ The options object is filled in with values from the create.html form fields.
 
 ### View
 
-	exports.view = function (game, player) {
+	exports.view = function (game, player, is_replay) {
 		var view = {
 			log: game.log,
 			...
@@ -292,6 +292,8 @@ The options object is filled in with values from the create.html form fields.
 
 Given a game object, a player role, return the view object that is used by the client to display the game state.
 This should contain game state known to the player.
+
+The optional is_replay argument is set to true if the game is in replay mode.
 
 ### Action
 

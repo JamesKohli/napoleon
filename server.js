@@ -3605,7 +3605,7 @@ function send_message(socket, cmd, arg) {
 
 function send_state(socket, state) {
 	try {
-		let view = RULES[socket.title_id].view(state, socket.role)
+		let view = RULES[socket.title_id].view(state, socket.role, false)
 		if (socket.seen < view.log.length)
 			view.log_start = socket.seen
 		else
@@ -3911,7 +3911,7 @@ function on_snap(socket, snap_id) {
 		let snap_state = SQL_SELECT_SNAP_STATE.get(socket.game_id, snap_id)
 		if (snap_state) {
 			let state = JSON.parse(snap_state)
-			let view = RULES[socket.title_id].view(state, socket.role)
+			let view = RULES[socket.title_id].view(state, socket.role, false)
 			view.prompt = undefined
 			view.actions = undefined
 			view.log = state.log

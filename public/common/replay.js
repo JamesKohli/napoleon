@@ -165,7 +165,7 @@ function update_replay_view() {
 	for (let r in roles)
 		document.body.classList.toggle(roles[r].class_name, player === r)
 
-	view = rules.view(replay_state, player)
+	view = rules.view(replay_state, player, true)
 	if (params.mode !== "debug")
 		view.actions = null
 
