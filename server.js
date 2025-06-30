@@ -3856,6 +3856,15 @@ function on_putnote(socket, note) {
 			SQL_UPDATE_GAME_NOTE.run(socket.game_id, socket.role, note)
 		else
 			SQL_DELETE_GAME_NOTE.run(socket.game_id, socket.role)
+
+		// update other connected clients from same player
+		if (game_clients[socket.game_id]) {
+			for (let other of game_clients[socket.game_id]) {
+				if (other !== socket && other.role === socket.role)
+					send_message(other, "note", note)
+			}
+		}
+
 	} catch (err) {
 		console.log(err)
 		return send_message(socket, "error", err.toString())
@@ -4038,6 +4047,10 @@ wss.on("connection", (socket, req) => {
 				socket.role,
 				roles.map(r => ({ role: r, name: players.find(p => p.role === r)?.name }))
 			])
+			let note = SQL_SELECT_GAME_NOTE.get(socket.game_id, socket.role)
+			if (note) {
+				send_message(socket, "note", note)
+			}
 		}
 
 		if (game_clients[socket.game_id]) {

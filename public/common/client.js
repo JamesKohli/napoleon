@@ -319,6 +319,13 @@ function dirty_notepad() {
 	}
 }
 
+function update_notepad(text) {
+	notepad.is_dirty = false
+	document.getElementById("notepad_input").value = text
+	document.getElementById("notepad_save").disabled = true
+	show_notepad()
+}
+
 function save_notepad() {
 	if (notepad.is_dirty) {
 		let text = document.getElementById("notepad_input").value
@@ -328,17 +335,8 @@ function save_notepad() {
 	}
 }
 
-function load_notepad() {
-	send_message("getnote")
-}
-
-function update_notepad(text) {
-	document.getElementById("notepad_input").value = text
-}
-
 function show_notepad() {
 	if (!notepad.is_visible) {
-		load_notepad()
 		document.getElementById("notepad_window").classList.add("show")
 		document.getElementById("notepad_input").focus()
 		notepad.is_visible = true
@@ -347,7 +345,7 @@ function show_notepad() {
 
 function hide_notepad() {
 	if (notepad.is_visible) {
-		save_notepad()
+		save_notepad() // auto-save when closing notepad
 		document.getElementById("notepad_window").classList.remove("show")
 		document.getElementById("notepad_input").blur()
 		notepad.is_visible = false
