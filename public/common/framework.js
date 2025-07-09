@@ -418,6 +418,7 @@ function _parse(text) {
 				i = k.replace(/^G\./, "L.G_") + "_"
 				array = line[3]
 				body = line[4]
+				emit(`${i} = 0`)
 				ix_loop = emit(`if (${i} < ${array}.length) { ${k} = ${array}[${i}++] } else { delete ${i} ; L.I = % }`)
 				block(body)
 				emit_jump(ix_loop)
@@ -831,6 +832,13 @@ function map_delete(map, key) {
 			return
 		}
 	}
+}
+
+function map_get_set(map, key) {
+	var set = map_get(map, key, null)
+	if (set === null)
+		map_set(map, key, (set = []))
+	return set
 }
 
 function map_for_each(map, f) {
