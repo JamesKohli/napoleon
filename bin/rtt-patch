@@ -227,7 +227,9 @@ function patch_game(game_id, {validate_actions=true, save_snaps=true, delete_und
 				if (validate_actions) {
 					if (!is_valid_action(rules, state, item.role, item.action, args)) {
 						console.error(`invalid action: ${item.role} ${item.action} ${item.arguments}`)
-						console.error("\t", JSON.stringify(rules.view(state, item.role).actions))
+						console.error("\t", "active", state.active)
+						console.error("\t", "state", (state.state ?? state.L?.P))
+						console.error("\t", "actions", JSON.stringify(rules.view(state, item.role).actions))
 						if (i < replay.length) {
 							console.log("BROKEN ENTRIES: %d", replay.length-i)
 							console.log(`sqlite3 db "delete from game_replay where game_id=${game_id} and replay_id>=${replay[i].replay_id}"`)
@@ -238,6 +240,8 @@ function patch_game(game_id, {validate_actions=true, save_snaps=true, delete_und
 				state = rules.action(state, item.role, item.action, args)
 				break
 			}
+
+			// if (verbose) console.log("\t", state?.active ?? "None", state?.state ?? state?.L?.P)
 
 			item.state = snapshot(state)
 			item.checksum = crc32c(item.state)
@@ -282,7 +286,7 @@ function patch_game(game_id, {validate_actions=true, save_snaps=true, delete_und
 		update_active.run(String(state.active), game_id)
 		update_state.run(JSON.stringify(state), game_id)
 
-		if (state.state === "game_over")
+		if (!state.active || state.active ==="None")
 			update_result.run(2, state.result, game_id)
 		else
 			update_result.run(1, null, game_id)
