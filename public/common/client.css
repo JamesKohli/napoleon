@@ -72,6 +72,8 @@ button {
 	border-color: white darkgray darkgray white;
 	color: black;
 	outline: 1px solid black;
+
+	line-height: 22px;
 }
 
 button:enabled:active:hover {
