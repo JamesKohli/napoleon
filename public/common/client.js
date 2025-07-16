@@ -596,6 +596,7 @@ function update_header() {
 		document.querySelector("header").classList.add("replay")
 	else
 		document.querySelector("header").classList.remove("replay")
+	document.querySelector("header").classList.toggle("watching", params.mode === "play" && player === "Observer" && !snap_view)
 	if (view.actions) {
 		document.querySelector("header").classList.add("your_turn")
 		is_your_turn = true
