@@ -389,13 +389,21 @@ Games must be reproducible for the replay and debugging to work, so
 the system initializes the PRNG with a random seed on setup. The random
 number generator state is stored in G.seed.
 
-To generate a new random number between 0 and range:
+To generate a new random integer between 0 and range (exclusive):
 
 	function random(range)
+
 
 To shuffle an array (for example a deck of cards):
 
 	function shuffle(list)
+
+Examples:
+
+	var roll = 1 + random(6)
+
+	var deck = [ 1, 2, 3, 4, 5 ]
+	shuffle(deck)
 
 ## Undo
 
