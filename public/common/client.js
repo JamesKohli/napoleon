@@ -1226,8 +1226,10 @@ var update_zoom = function () {}
 		if (transform1.scale !== old_scale) {
 			if (transform1.scale === 1) {
 				e_inner.style.transform = null
+				e_inner.dataset.scale = 1
 			} else {
 				e_inner.style.transform = `scale(${transform1.scale})`
+				e_inner.dataset.scale = transform1.scale
 			}
 			e_inner.style.width = (win_w / transform1.scale) + "px"
 			e_outer.style.width = (e_inner.clientWidth * transform1.scale) + "px"
