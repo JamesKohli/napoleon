@@ -922,14 +922,6 @@ begin
 	insert into
 		tm_winners ( pool_id, user_id )
 	with
-		tt as (
-			select
-				(2 * round_count) / player_count as threshold
-			from
-				tm_seeds
-			where
-				seed_id = ( select seed_id from tm_pools where pool_id = new.pool_id )
-		),
 		aa as (
 			select
 				max(points) as max_points
@@ -950,9 +942,9 @@ begin
 	select
 		pool_id, user_id
 	from
-		tm_results, bb, tt
+		tm_results, bb
 	where
-		pool_id = new.pool_id and points > threshold and points = max_points and son = max_son
+		pool_id = new.pool_id and points > 1 and points = max_points and son = max_son
 	;
 end;
 
