@@ -284,6 +284,12 @@ async function load_replay() {
 
 	init_player_names(body.players)
 
+	if (typeof rules.static_view === "function")
+		static_view = rules.static_view(body.state)
+
+	if (typeof on_init === "function")
+		on_init(body.setup.scenario, body.setup.options, static_view)
+
 	console.log("PROCESSING REPLAY")
 	let old_active = null
 	let s = null

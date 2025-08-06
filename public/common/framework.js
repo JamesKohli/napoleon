@@ -6,6 +6,7 @@ const ROLES = []
 const SCENARIOS = []
 var G, L, R, V, P = {}
 function on_setup(scenario, options) {}
+function on_static_view() {}
 function on_view() {}
 function on_query(q) {}
 function on_assert() {}
@@ -88,6 +89,20 @@ exports.setup = function (seed, scenario, options) {
 	_save()
 
 	return G
+}
+
+exports.static_view = function (game) {
+	var SV = null
+	if (typeof on_static_view === "function") {
+		G = state
+		L = null
+		R = role
+		V = null
+		_load()
+		SV = on_static_view()
+		_save()
+	}
+	return SV
 }
 
 exports.view = function (state, role) {

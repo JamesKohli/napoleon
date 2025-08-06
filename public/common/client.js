@@ -7,6 +7,9 @@
 var roles = null
 var player = "Observer"
 var view = null
+var static_view = null
+var game_scenario = null
+var game_options = null
 
 /* PRIVATE GLOBALS */
 
@@ -512,9 +515,18 @@ function connect_play() {
 			break
 
 		case "players":
+			// role, players, scenario, options, and static view
 			player = arg[0]
 			init_player_names(arg[1])
+			game_scenario = arg[2]
+			game_options = arg[3]
+			static_view = arg[4]
+
 			document.body.classList.add(player.replace(/\W/g, "_"))
+
+			if (typeof on_init === "function")
+				on_init(game_scenario, game_options, static_view)
+
 			if (player !== "Observer") {
 				init_notepad()
 				add_resign_menu()

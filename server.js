@@ -1315,6 +1315,13 @@ function get_game_roles(title_id, scenario, options) {
 	return roles
 }
 
+function get_game_static_view(title_id, state) {
+	let static_view = RULES[title_id].static_view
+	if (typeof static_view === "function")
+		return static_view(state)
+	return null
+}
+
 function unload_module(filename) {
 	// Remove a module and its dependencies from require.cache so they can be reloaded.
 	let mod = require.cache[filename]
@@ -4041,11 +4048,16 @@ wss.on("connection", (socket, req) => {
 				SQL_DELETE_UNSEEN_GAME.run(user_id, socket.game_id)
 		}
 
+		let state = get_game_state(socket.game_id)
+
 		if (socket.seen === 0) {
 			let roles = get_game_roles(game.title_id, game.scenario, game.options)
 			send_message(socket, "players", [
 				socket.role,
-				roles.map(r => ({ role: r, name: players.find(p => p.role === r)?.name }))
+				roles.map(r => ({ role: r, name: players.find(p => p.role === r)?.name })),
+				game.scenario,
+				parse_game_options(game.options),
+				get_game_static_view(game.title_id, state)
 			])
 			let note = SQL_SELECT_GAME_NOTE.get(socket.game_id, socket.role)
 			if (note) {

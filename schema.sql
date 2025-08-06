@@ -688,6 +688,14 @@ create view game_replay_view as
 	select
 		game_id,
 		json_object(
+			'setup', json_object(
+					'game_id', game_id,
+					'title_id', title_id,
+					'scenario', scenario,
+					'options', json(options),
+					'player_count', player_count,
+					'notice', notice
+				),
 			'players',
 				(select json_group_array(
 						json_object('role', role, 'name', name)
