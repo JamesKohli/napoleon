@@ -16,5 +16,9 @@
 	},
 	"devDependencies": {
 		"eslint": "^9.25.1"
+	},
+	"exports": {
+		"./tools/cabinet": "./tools/cabinet.js",
+		"./tools/oklab": "./tools/oklab.js"
 	}
 }
