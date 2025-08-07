@@ -2469,7 +2469,7 @@ function update_elo_ratings(game_id) {
  */
 
 const MAIL_FROM = process.env.MAIL_FROM || "user@localhost"
-const MAIL_FOOTER = "\n--\nYou can unsubscribe from notifications on your profile page:\n" + SITE_URL + "/profile\n"
+const MAIL_FOOTER = "\n--\nYou can unsubscribe from notifications in your account settings:\n" + SITE_URL + "/account\n"
 
 function mail_callback(err) {
 	if (err)
