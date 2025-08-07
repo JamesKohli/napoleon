@@ -610,6 +610,7 @@ app.post("/signup", must_pass_altcha, function (req, res) {
 	let user = SQL_INSERT_USER.get(name, mail)
 	SQL_UPDATE_USER_FIRST_SEEN.run(user.user_id, ip)
 	SQL_UPDATE_USER_PASSWORD.run(user.user_id, hash, salt)
+	SQL_INSERT_USER_VACATION.run(user.user_id, 5)
 	login_insert(res, user.user_id)
 	res.redirect("/account")
 })
@@ -2619,6 +2620,15 @@ function send_chat_activity_notification(game_id, p) {
 	send_play_notification(p, game_id, "Chat activity")
 }
 
+function send_vacation_notification(user, vacation) {
+	var message
+	if (vacation > 0)
+		message = "You have used one vacation day -- ${vacation} left!"
+	else
+		message = "You have used your last vacation day!"
+	send_notification(user, SITE_URL + "/account", message)
+}
+
 function send_game_started_notification(game_id, active) {
 	let players = SQL_SELECT_PLAYERS.all(game_id)
 	for (let p of players) {
@@ -2767,24 +2777,82 @@ setTimeout(purge_game_ticker, 89 * 1000)
 // SQL_UPDATE_PLAYERS_ADD_TIME is handled by trigger
 // SQL_UPDATE_PLAYERS_USE_TIME is handled by trigger
 
+const SQL_INSERT_USER_VACATION = SQL("insert into user_vacation (user_id,vacation) values (?,?)")
+const SQL_SELECT_USER_VACATION = SQL("select vacation from user_vacation where user_id = ?").pluck()
+const SQL_SPEND_USER_VACATION = SQL("update user_vacation set vacation = vacation - 1 where vacation > 0 and user_id = ?")
+
 const SQL_SELECT_TIME_CONTROL = SQL("select * from time_control_view")
 
 const SQL_INSERT_TIMEOUT = SQL("insert into user_timeout (user_id, game_id) values (?, ?)")
 
+const SQL_SELECT_VACATION_CONTROL = SQL(`
+	select
+		distinct user_id,
+		name, mail, notify,
+		vacation
+	from
+		time_control_view
+		join users using(user_id)
+		left join user_vacation using(user_id)
+	where
+		is_opposed and coalesce(vacation, 0) > 0
+`)
+
+const SQL_ADD_VACATION_TIME = SQL(`
+	update players
+		set clock = clock + 1
+	where
+		user_id = ? and exists (
+			select 1 from games where games.game_id = players.game_id and status = 1 and is_opposed
+		)
+`)
+
 function time_control_ticker() {
-	for (let item of SQL_SELECT_TIME_CONTROL.all()) {
-		if (item.is_opposed) {
-			console.log("TIMED OUT GAME:", item.game_id, item.role)
-			do_timeout(item.game_id, item.role, item.role + " timed out.")
-			SQL_INSERT_TIMEOUT.run(item.user_id, item.game_id)
-			if (item.is_match) {
-				console.log("BANNED FROM TOURNAMENTS:", item.user_id)
-				TM_INSERT_BANNED.run(item.user_id)
-				TM_DELETE_QUEUE_USER.run(item.user_id)
+	var users_on_vacation, games_to_timeout
+
+	SQL_BEGIN.run()
+	try {
+		console.log("TIME CONTROL TICKER")
+
+		users_on_vacation = SQL_SELECT_VACATION_CONTROL.all()
+		for (let user of users_on_vacation) {
+			console.log("SPEND VACATION:", JSON.stringify(user))
+			SQL_SPEND_USER_VACATION.run(user.user_id)
+			SQL_ADD_VACATION_TIME.run(user.user_id)
+		}
+
+		games_to_timeout = SQL_SELECT_TIME_CONTROL.all()
+		for (let item of games_to_timeout) {
+			if (item.is_opposed) {
+				console.log("TIMED OUT GAME:", item.game_id, item.role)
+				SQL_INSERT_TIMEOUT.run(item.user_id, item.game_id)
+				if (item.is_match) {
+					console.log("BANNED FROM TOURNAMENTS:", item.user_id)
+					TM_INSERT_BANNED.run(item.user_id)
+					TM_DELETE_QUEUE_USER.run(item.user_id)
+				}
+			} else {
+				console.log("TIMED OUT GAME:", item.game_id, item.role, "(solo)")
+				SQL_DELETE_GAME.run(item.game_id)
 			}
-		} else {
-			console.log("TIMED OUT GAME:", item.game_id, item.role, "(solo)")
-			SQL_DELETE_GAME.run(item.game_id)
+		}
+
+		SQL_COMMIT.run()
+	} catch (err) {
+		console.log(err)
+		return
+	} finally {
+		if (db.inTransaction)
+			SQL_ROLLBACK.run()
+	}
+
+	for (let user of users_on_vacation) {
+		send_vacation_notification(user, user.vacation - 1)
+	}
+
+	for (let item of games_to_timeout) {
+		if (item.is_opposed) {
+			do_timeout(item.game_id, item.role, item.role + " timed out.")
 		}
 	}
 }

@@ -78,6 +78,11 @@ create table if not exists user_timeout (
 
 create index if not exists user_timeout_idx on user_timeout(user_id, time);
 
+create table if not exists user_vacation (
+	user_id integer primary key,
+	vacation integer
+);
+
 create table if not exists user_move_hist (
 	user_id integer,
 	minutes integer,
@@ -176,6 +181,7 @@ create view user_profile_view as
 		profile as (
 			select
 				user_id, name, mail, notify, ctime, atime, about, is_banned,
+				vacation,
 				move_time_mean,
 				coalesce(q1, q2, q3) as move_time_q1,
 				coalesce(q2, q3) as move_time_q2,
@@ -187,6 +193,7 @@ create view user_profile_view as
 				left join user_first_seen using(user_id)
 				left join user_last_seen using(user_id)
 				left join user_about using(user_id)
+				left join user_vacation using(user_id)
 				left join timeout using(user_id)
 				left join user_move_mean using(user_id)
 				left join user_move_iqr using(user_id)
@@ -1124,6 +1131,7 @@ begin
 	delete from user_about where user_id = old.user_id;
 	delete from user_move_hist where user_id = old.user_id;
 	delete from user_timeout where user_id = old.user_id;
+	delete from user_vacation where user_id = old.user_id;
 	delete from webhooks where user_id = old.user_id;
 	delete from logins where user_id = old.user_id;
 	delete from tokens where user_id = old.user_id;

@@ -15,7 +15,7 @@ create temporary view tm_lift_ban_view as
 		date(timeout_last) as timeout_date,
 		timeout_total,
 		games_since_timeout,
-		(games_since_timeout > timeout_total) and (julianday() > julianday(timeout_last)+14) as lift_ban
+		(games_since_timeout > max(5, timeout_total)) and (julianday() > julianday(timeout_last)+21) as lift_ban
 	from
 		user_profile_view
 	where
