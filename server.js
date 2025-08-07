@@ -758,6 +758,21 @@ app.get("/admin/unban-user/:who", must_be_administrator, function (req, res) {
 	return res.redirect("/user/" + who)
 })
 
+const SQL_SELECT_ADMIN_TIMEOUTS = SQL(`
+	select
+		game_id, notice, moves, name, time
+	from user_timeout
+	join users using(user_id)
+	join games using(game_id)
+	where is_opposed and time > datetime('now', '-28 days')
+	order by time desc
+`)
+
+app.get("/admin/timeouts", must_be_administrator, function (req, res) {
+	let timeouts = SQL_SELECT_ADMIN_TIMEOUTS.all()
+	return res.render("admin_timeouts.pug", { timeouts })
+})
+
 /*
  * USER PROFILE
  */
@@ -1419,6 +1434,7 @@ const SQL_FINISH_GAME = SQL(`
 		game_id = ?
 `)
 
+const SQL_REWIND_GAME_TIMEOUT = SQL("delete from user_timeout where game_id=?")
 const SQL_REWIND_GAME_CLOCK = SQL("update players set clock=1 where game_id=? and clock < 1")
 const SQL_REWIND_GAME = SQL("update games set status=1,result=null,moves=?,active=?,mtime=datetime() where game_id=?")
 const SQL_SELECT_REWIND = SQL("select snap_id, state->>'$.active' as active, coalesce(state->>'$.state', state->>'$.L.P', '-') as state from game_snap where game_id=? order by snap_id desc")
@@ -2327,6 +2343,7 @@ function rewind_game_to_snap(game_id, snap_id) {
 
 		SQL_REWIND_GAME.run(snap_id - 1, String(snap_state.active), game_id)
 		SQL_REWIND_GAME_CLOCK.run(game_id)
+		SQL_REWIND_GAME_TIMEOUT.run(game_id)
 
 		update_join_clients(game_id)
 		if (game_clients[game_id])
