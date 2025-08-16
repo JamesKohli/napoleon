@@ -334,6 +334,13 @@ menu li {
 menu li.checked::before { content: "\2714  " }
 menu li.unchecked::before { content: "\2714  "; color:transparent; }
 
+menu li label {
+	cursor: pointer;
+	display: block;
+	margin: -4px -8px;
+	padding: 4px 8px;
+}
+
 menu li a {
 	display: block;
 	margin: -4px -8px;
