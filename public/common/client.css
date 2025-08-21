@@ -205,6 +205,10 @@ header .viewpoint_button.selected:active:hover {
 	border-color: hsl(51,100%,40%) hsl(51,100%,80%) hsl(51,100%,80%) hsl(51,100%,40%);
 }
 
+header.warning {
+	background-color: red !important;
+}
+
 header.disconnected {
 	background-color: red !important;
 }

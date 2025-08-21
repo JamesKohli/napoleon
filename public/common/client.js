@@ -422,6 +422,44 @@ function init_player_names(players) {
 	}
 }
 
+/* IDLE TIMER */
+
+var idle_timer = 0
+
+function reset_idle_timer() {
+	clearTimeout(idle_timer)
+	idle_timer = setTimeout(idle_disconnect, 1000 * 60 * 15)
+}
+
+function idle_disconnect() {
+	if (socket && socket.readyState === 1) {
+		socket.close(1000, "idle")
+	}
+	idle_timer = 0
+}
+
+function reconnect_play() {
+	if (socket && socket.readyState === 3 && !document.hidden) {
+		console.log("RECONNECT")
+		// remove reconnect button
+		document.getElementById("actions").replaceChildren()
+		connect_play()
+	}
+}
+
+document.addEventListener("mousemove", reset_idle_timer, true)
+document.addEventListener("mousedown", reset_idle_timer, true)
+document.addEventListener("keypress", reset_idle_timer, true)
+document.addEventListener("scroll", reset_idle_timer, true)
+document.addEventListener("touchstart", reset_idle_timer, true)
+
+// TODO: auto-reconnect on page navigation (back/forward)?
+// window.addEventListener("pageshow", reconnect_play)
+// TODO: auto-reconnect when becoming visible again?
+// window.addEventListener("visibilitychange", reconnect_play)
+// TODO: auto-reconnect when windows gains focus again?
+// window.addEventListener("focus", reconnect_play)
+
 /* CONNECT TO GAME SERVER */
 
 function send_message(cmd, arg) {
@@ -430,19 +468,15 @@ function send_message(cmd, arg) {
 	socket.send(data)
 }
 
-let reconnect_count = 0
-let reconnect_max = 10
-
 function connect_play() {
-	if (reconnect_count >= reconnect_max) {
-		document.title = "DISCONNECTED"
-		document.getElementById("prompt").textContent = "Disconnected."
-		return
-	}
-
 	let protocol = (window.location.protocol === "http:") ? "ws" : "wss"
 	let seen = document.getElementById("log").children.length
 	let url = `${protocol}://${window.location.host}/play-socket?title=${params.title_id}&game=${params.game_id}&role=${encodeURIComponent(params.role)}&seen=${seen}`
+
+	if (socket && socket.readyState < 3) {
+		console.log("ALREADY CONNECTED")
+		return
+	}
 
 	console.log("CONNECTING", url)
 	document.getElementById("prompt").textContent = "Connecting... "
@@ -450,29 +484,33 @@ function connect_play() {
 	socket = new WebSocket(url)
 
 	window.addEventListener("beforeunload", function () {
-		socket.close(1000)
+		socket.close(1000, "unload")
 	})
 
 	socket.onopen = function (evt) {
 		console.log("OPEN")
 		document.querySelector("header").classList.remove("disconnected")
-		reconnect_count = 0
+		reset_idle_timer()
 	}
 
 	socket.onclose = function (evt) {
-		console.log("CLOSE %d", evt.code)
+		console.log("CLOSE %d", evt.code, evt.reason)
+		if (evt.code === 1000 && evt.reason === "unload")
+			return
 		game_cookie = 0
-		if (evt.code === 1000 && evt.reason !== "") {
-			document.getElementById("prompt").textContent = "Disconnected: " + evt.reason
-			document.title = "DISCONNECTED"
+		document.title = "\xd7 " + game_title
+		document.querySelector("header").classList.add("disconnected")
+		document.getElementById("prompt").textContent = "Disconnected."
+		document.getElementById("actions").replaceChildren()
+		for (let role in roles)
+			roles[role].element.classList.remove("present")
+		if (view) {
+			view.actions = null
+			on_update()
 		}
-		if (evt.code !== 1000) {
-			document.querySelector("header").classList.add("disconnected")
-			document.getElementById("prompt").textContent = `Reconnecting soon... (${reconnect_count+1}/${reconnect_max})`
-			let wait = 1000 * (Math.random() + 0.5) * Math.pow(2, reconnect_count++)
-			console.log("WAITING %.1f TO RECONNECT", wait/1000)
-			setTimeout(connect_play, wait)
-		}
+		show_toolbar_button("Reconnect", function (evt) {
+			reconnect_play()
+		})
 	}
 
 	socket.onmessage = function (evt) {
@@ -482,10 +520,10 @@ function connect_play() {
 		console.log("MESSAGE", cmd)
 		switch (cmd) {
 		case "warning":
+			document.querySelector("header").classList.add("warning")
 			document.getElementById("prompt").textContent = arg
-			document.querySelector("header").classList.add("disconnected")
 			setTimeout(() => {
-				document.querySelector("header").classList.remove("disconnected")
+				document.querySelector("header").classList.remove("warning")
 				update_header()
 			}, 1000)
 			break
@@ -673,6 +711,14 @@ try {
 }
 
 /* ACTIONS */
+
+function show_toolbar_button(label, callback) {
+	let button = document.createElement("button")
+	button.innerHTML = label
+	button.addEventListener("click", callback)
+	document.getElementById("actions").prepend(button)
+	return button
+}
 
 function action_button_with_argument(verb, noun, label) {
 	if (params.mode === "replay")
