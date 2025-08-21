@@ -164,7 +164,7 @@ function human_date(date) {
 function confirm_delete() {
 	let warning = "Are you sure you want to DELETE this game?"
 	if (window.confirm(warning))
-		post("/api/delete/" + game.game_id)
+		post("/api/delete/" + game.game_id, "/games/active")
 }
 
 function confirm_rewind() {
@@ -173,7 +173,7 @@ function confirm_rewind() {
 		post("/api/rewind/" + game.game_id)
 }
 
-async function post(url) {
+async function post(url, next) {
 	window.error.textContent = ""
 	let res = await fetch(url, { method: "POST" })
 	if (!res.ok) {
@@ -185,7 +185,10 @@ async function post(url) {
 		window.error.textContent = text
 		return
 	}
-	start_event_source()
+	if (next)
+		window.location.replace(next)
+	else
+		window.location.reload()
 }
 
 function start() {
@@ -231,42 +234,6 @@ function send_invite() {
 	if (invite_user) {
 		document.getElementById("invite").close()
 		post(`/api/invite/${game.game_id}/${encodeURIComponent(invite_role)}/${encodeURIComponent(invite_user)}`)
-	}
-}
-
-function start_event_source() {
-	if (!game)
-		return
-	if (!evtsrc || evtsrc.readyState === 2) {
-		console.log("STARTING EVENT SOURCE")
-		evtsrc = new EventSource("/join-events/" + game.game_id)
-		evtsrc.addEventListener("hello", function (evt) {
-			console.log("HELLO", evt.data)
-			window.disconnected.textContent = ""
-		})
-		evtsrc.addEventListener("updated", function (evt) {
-			console.log("UPDATED", evt.data)
-			let data = JSON.parse(evt.data)
-			game = data.game
-			roles = data.roles
-			players = data.players
-			update()
-		})
-		evtsrc.addEventListener("deleted", function (evt) {
-			console.log("DELETED", evt.data)
-			game = null
-			roles = null
-			players = null
-			update()
-			evtsrc.close()
-		})
-		evtsrc.onerror = function (evt) {
-			console.log("ERROR", evt)
-			window.disconnected.textContent = "Disconnected from server..."
-		}
-		window.addEventListener('beforeunload', function (_evt) {
-			evtsrc.close()
-		})
 	}
 }
 
@@ -431,7 +398,7 @@ function create_player_box(role, player) {
 	}
 }
 
-function update() {
+window.onload = function update() {
 	window.error.textContent = ""
 	window.game_info.replaceChildren()
 	window.game_players.replaceChildren()
@@ -475,11 +442,3 @@ function update() {
 	}
 }
 
-window.onload = function () {
-	update()
-	if (user_id && game.status <= 1) {
-		start_event_source()
-		setInterval(start_event_source, 15000)
-		setInterval(update, 60000)
-	}
-}

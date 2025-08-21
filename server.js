@@ -35,11 +35,6 @@ else
 	console.log("Webhook notifications disabled.")
 
 function LOG_STATS() {
-	// Count clients connected to join page events
-	let num_joins = 0
-	for (let id in join_clients)
-		num_joins += join_clients[id].length
-
 	// Count clients connected to game websockets
 	let num_games = 0
 	let num_sockets = 0
@@ -48,15 +43,14 @@ function LOG_STATS() {
 		num_sockets += game_clients[id].length
 	}
 
-	if (num_games > 0 || num_sockets > 0 || num_joins > 0)
-		console.log(`>>> games=${num_games} sockets=${num_sockets} joins=${num_joins}`)
+	if (num_games > 0 || num_sockets > 0)
+		console.log(`>>> games=${num_games} sockets=${num_sockets}`)
 }
 
 setInterval(LOG_STATS, 60 * 1000)
 
 /* CONNECTED CLIENT INFO */
 
-var join_clients = {}
 var game_clients = {}
 var game_cookies = {}
 
@@ -2000,8 +1994,6 @@ app.post("/api/delete/:game_id", must_be_logged_in, function (req, res) {
 	let info = SQL_DELETE_GAME_BY_OWNER.run(game_id, req.user.user_id)
 	if (info.changes === 0)
 		return res.send("Not authorized to delete that game ID.")
-	if (info.changes === 1)
-		update_join_clients_deleted(game_id)
 	res.send("SUCCESS")
 })
 
@@ -2099,33 +2091,6 @@ app.post("/rematch/:old_game_id", must_be_logged_in, function (req, res) {
 	return res.redirect("/join/" + new_game_id)
 })
 
-function update_join_clients_deleted(game_id) {
-	let list = join_clients[game_id]
-	if (list && list.length > 0)
-		for (let res of list)
-			res.write("event: deleted\ndata: null\n\n")
-	delete join_clients[game_id]
-}
-
-function update_join_clients(game_id) {
-	let list = join_clients[game_id]
-	if (list && list.length > 0) {
-		let game = SQL_SELECT_GAME_VIEW.get(game_id)
-		if (game) {
-			let players = SQL_SELECT_PLAYER_VIEW.all(game_id)
-			let roles = null
-			if (game)
-				roles = get_game_roles(game.title_id, game.scenario, game.options)
-			let data = "event: updated\ndata: " + JSON.stringify({game,roles,players}) + "\n\n"
-			for (let res of list)
-				res.write(data)
-		} else {
-			for (let res of list)
-				res.write("event: deleted\ndata: null\n\n")
-		}
-	}
-}
-
 app.get("/join/:game_id", function (req, res) {
 	let game_id = req.params.game_id | 0
 	let game = SQL_SELECT_GAME_VIEW.get(game_id)
@@ -2176,29 +2141,6 @@ app.get("/join/:game_id", function (req, res) {
 	})
 })
 
-app.get("/join-events/:game_id", must_be_logged_in, function (req, res) {
-	let game_id = req.params.game_id | 0
-
-	res.setHeader("Content-Type", "text/event-stream")
-	res.setHeader("Connection", "keep-alive")
-	res.setHeader("X-Accel-Buffering", "no")
-
-	if (!(game_id in join_clients))
-		join_clients[game_id] = []
-	join_clients[game_id].push(res)
-
-	res.on("close", () => {
-		let list = join_clients[game_id]
-		if (list) {
-			let i = list.indexOf(res)
-			if (i >= 0)
-				list.splice(i, 1)
-		}
-	})
-
-	res.write("retry: 15000\nevent: hello\ndata: null\n\n")
-})
-
 function do_join(res, game_id, role, user_id, user_name, is_invite) {
 	let game = SQL_SELECT_GAME.get(game_id)
 	let roles = get_game_roles(game.title_id, game.scenario, game.options)
@@ -2218,7 +2160,6 @@ function do_join(res, game_id, role, user_id, user_name, is_invite) {
 	}
 	let info = SQL_INSERT_PLAYER_ROLE.run(game_id, role, user_id, is_invite ? 2 : 0)
 	if (info.changes === 1) {
-		update_join_clients(game_id)
 		res.send("SUCCESS")
 
 		// send chat message about player joining a game in progress
@@ -2261,7 +2202,6 @@ app.post("/api/accept/:game_id/:role", must_be_logged_in, function (req, res) {
 	let role = req.params.role
 	let info = SQL_UPDATE_PLAYER_ACCEPT.run(game_id, role, req.user.user_id)
 	if (info.changes === 1) {
-		update_join_clients(game_id)
 		res.send("SUCCESS")
 
 		// send chat message about player joining a game in progress
@@ -2278,7 +2218,6 @@ app.post("/api/part/:game_id/:role", must_be_logged_in, function (req, res) {
 	let user_name = SQL_SELECT_PLAYER_NAME.get(game_id, role)
 	let game = SQL_SELECT_GAME.get(game_id)
 	SQL_DELETE_PLAYER_ROLE.run(game_id, role)
-	update_join_clients(game_id)
 	res.send("SUCCESS")
 
 	// send chat message about player leaving a game in progress
@@ -2356,8 +2295,6 @@ function start_game(game) {
 			SQL_ROLLBACK.run()
 	}
 
-	update_join_clients(game.game_id)
-
 	send_game_started_notification(game.game_id, state.active)
 }
 
@@ -2406,7 +2343,6 @@ function rewind_game_to_snap(game_id, snap_id) {
 		SQL_REWIND_GAME_CLOCK.run(game_id)
 		SQL_REWIND_GAME_TIMEOUT.run(game_id)
 
-		update_join_clients(game_id)
 		if (game_clients[game_id])
 			for (let other of game_clients[game_id])
 				send_state(other, snap_state)
@@ -3859,9 +3795,6 @@ function put_new_state(title_id, game_id, state, old_active, role, action, args,
 			put_snap(game_id, replay_id, state)
 
 		put_game_state(game_id, state, old_active, is_move)
-
-		if (is_changed_active(old_active, state.active))
-			update_join_clients(game_id)
 
 		if (game_clients[game_id])
 			for (let other of game_clients[game_id])
