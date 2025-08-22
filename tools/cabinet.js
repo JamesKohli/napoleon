@@ -91,7 +91,7 @@ function emit(output, w, h, dx, dy, lines) {
 	var b = outline_width + stroke_width
 	var l = outline_width + dx
 	if (debug)
-		console.log(`CABINET { width: ${w}px; height: ${h}px; background-size: 100%; margin: -${t}px -${r}px -${b}px -${l}px; background-image: url(${output}); }`)
+		console.log(`CABINET { width: ${w}px; height: ${h}px; margin: -${t}px -${r}px -${b}px -${l}px; background-image: url(${output}); }`)
 	if (typeof lines === "string")
 		lines = lines.trim().split("\n").map(line => line.trim()).filter(line => line.length > 0)
 	fs.writeFileSync(output,

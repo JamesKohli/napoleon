@@ -1,3 +1,5 @@
+#!/usr/bin/env -S node
+
 /* PARSE LAYOUT DATA
 
 usage: node parse-layout.js input.svg [ input2.svg ... ] > layout.js
