@@ -30,6 +30,7 @@ let snap_active = []
 let snap_cache = []
 let snap_count = 0
 let snap_this = 0
+let snap_skip_missing = null
 let snap_view = null
 
 var replay_panel = null
@@ -605,6 +606,11 @@ function connect_play() {
 				document.body.appendChild(replay_panel)
 			break
 
+		case "nosnap":
+			snap_cache[arg] = -1
+			snap_skip_missing()
+			break
+
 		case "snap":
 			snap_active[arg[0]] = arg[1]
 			snap_cache[arg[0]] = arg[2]
@@ -677,7 +683,7 @@ function update_log(change_start, end) {
 		div.removeChild(div.lastChild)
 
 	for (let i = div.children.length; i < end; ++i) {
-		let text = game_log[i]
+		let text = i < game_log.length ? game_log[i] : "???"
 		if (params.mode === "debug" && typeof text === "object") {
 			let entry = document.createElement("a")
 			entry.href = "#" + text[0]
@@ -970,10 +976,13 @@ add_replay_button("replay_last", null).classList.add("hide")
 add_replay_button("replay_play", on_snap_stop)
 add_replay_button("replay_stop", null).classList.add("hide")
 
-function request_snap(snap_id) {
+function request_snap(snap_id, skip) {
+	snap_skip_missing = skip
 	if (snap_id >= 1 && snap_id <= snap_count) {
 		snap_this = snap_id
-		if (snap_cache[snap_id])
+		if (snap_cache[snap_id] === -1)
+			snap_skip_missing()
+		else if (snap_cache[snap_id])
 			show_snap(snap_id)
 		else
 			send_message("getsnap", snap_id)
@@ -989,21 +998,21 @@ function show_snap(snap_id) {
 }
 
 function on_snap_first() {
-	request_snap(1)
+	request_snap(1, on_snap_next)
 }
 
 function on_snap_prev() {
 	if (!snap_view)
-		request_snap(snap_count)
+		request_snap(snap_count, on_snap_prev)
 	else if (snap_this > 1)
-		request_snap(snap_this - 1)
+		request_snap(snap_this - 1, on_snap_prev)
 }
 
 function on_snap_next() {
 	if (!snap_view)
 		on_snap_stop()
 	else if (snap_this < snap_count)
-		request_snap(snap_this + 1)
+		request_snap(snap_this + 1, on_snap_next)
 	else
 		on_snap_stop()
 }

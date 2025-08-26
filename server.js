@@ -1528,11 +1528,12 @@ const SQL_DELETE_GAME_NOTE = SQL("DELETE FROM game_notes WHERE game_id=? AND rol
 
 const SQL_INSERT_REPLAY = SQL("insert into game_replay (game_id,replay_id,role,action,arguments) values (?, (select coalesce(max(replay_id), 0) + 1 from game_replay where game_id=?) ,?,?,?) returning replay_id").pluck()
 
-const SQL_INSERT_SNAP = SQL("insert into game_snap (game_id,snap_id,replay_id,state) values (?, (select coalesce(max(snap_id), 0) + 1 from game_snap where game_id=?), ?, ?) returning snap_id").pluck()
+const SQL_INSERT_SNAP = SQL("insert into game_snap (game_id,snap_id,replay_id,state,log_length) values (?, (select coalesce(max(snap_id), 0) + 1 from game_snap where game_id=?), ?, ?, ?) returning snap_id").pluck()
 const SQL_SELECT_SNAP = SQL("select * from game_snap where game_id = ? and snap_id = ?")
 const SQL_SELECT_SNAP_STATE = SQL("select state from game_snap where game_id = ? and snap_id = ?").pluck()
 const SQL_SELECT_SNAP_COUNT = SQL("select max(snap_id) from game_snap where game_id=?").pluck()
 
+const SQL_DELETE_GAME_SNAP_ROLLBACK = SQL("delete from game_snap where game_id=? and log_length > ? returning snap_id").pluck()
 const SQL_DELETE_GAME_SNAP = SQL("delete from game_snap where game_id=? and snap_id > ?")
 const SQL_DELETE_GAME_REPLAY = SQL("delete from game_replay where game_id=? and replay_id > ?")
 
@@ -3775,8 +3776,14 @@ function dont_snap(rules, state, old_active) {
 	return false
 }
 
+function delete_snaps_after_rollback(game_id, new_log_len) {
+	let broken = SQL_DELETE_GAME_SNAP_ROLLBACK.all(game_id, new_log_len)
+	for (let snap_id of broken)
+		console.log("DELETE SNAPSHOT AFTER ROLLBACK", snap_id)
+}
+
 function put_snap(game_id, replay_id, state) {
-	let snap_id = SQL_INSERT_SNAP.get(game_id, game_id, replay_id, snap_from_state(state))
+	let snap_id = SQL_INSERT_SNAP.get(game_id, game_id, replay_id, snap_from_state(state), state.log.length)
 	if (game_clients[game_id])
 		for (let other of game_clients[game_id])
 			send_message(other, "snapsize", snap_id)
@@ -3796,10 +3803,13 @@ function put_game_state(game_id, state, old_active, is_move) {
 	}
 }
 
-function put_new_state(title_id, game_id, state, old_active, role, action, args, is_move) {
+function put_new_state(title_id, game_id, state, old_active, role, action, args, is_move, is_rollback) {
 	SQL_BEGIN.run()
 	try {
 		let replay_id = put_replay(game_id, role, action, args)
+
+		if (is_rollback)
+			delete_snaps_after_rollback(game_id, state.log.length)
 
 		if (!dont_snap(RULES[title_id], state, old_active))
 			put_snap(game_id, replay_id, state)
@@ -3836,6 +3846,7 @@ function on_action(socket, action, args, cookie) {
 
 	try {
 		let state = get_game_state(socket.game_id)
+		let old_log_length = state.log.length
 		let old_active = String(state.active)
 
 		// Don't update cookie during simultaneous turns, as it results
@@ -3844,7 +3855,13 @@ function on_action(socket, action, args, cookie) {
 			game_cookies[socket.game_id] ++
 
 		state = RULES[socket.title_id].action(state, socket.role, action, args)
-		put_new_state(socket.title_id, socket.game_id, state, old_active, socket.role, action, args, 1)
+
+		put_new_state(socket.title_id, socket.game_id, state,
+			old_active,
+			socket.role, action, args,
+			1,
+			(action !== "undo" && state.log.length < old_log_length)
+		)
 	} catch (err) {
 		console.log(err)
 		return send_message(socket, "error", err.toString())
@@ -3874,7 +3891,7 @@ function do_resign(game_id, role, replay_action, message) {
 
 	state = finish_game_state(game.title_id, state, result, message)
 
-	put_new_state(game.title_id, game_id, state, old_active, role, replay_action, result, 0)
+	put_new_state(game.title_id, game_id, state, old_active, role, replay_action, result, 0, false)
 }
 
 function finish_game_state(title_id, state, result, message) {
@@ -4013,6 +4030,8 @@ function on_snap(socket, snap_id) {
 			view.actions = undefined
 			view.log = state.log
 			send_message(socket, "snap", [ snap_id, state.active, view ])
+		} else {
+			send_message(socket, "nosnap", snap_id)
 		}
 	} catch (err) {
 		console.log(err)

@@ -15,7 +15,7 @@ let insert_replay = db.prepare("insert into game_replay (game_id,replay_id,role,
 let select_last_snap = db.prepare("select max(snap_id) from game_snap where game_id=?").pluck()
 let select_snap = db.prepare("select * from game_snap where game_id=? and snap_id=?")
 let delete_snap = db.prepare("delete from game_snap where game_id=? and snap_id>?")
-let insert_snap = db.prepare("insert into game_snap(game_id,snap_id,replay_id,state) values (?,?,?,?)")
+let insert_snap = db.prepare("insert into game_snap(game_id,snap_id,replay_id,log_length,state) values (?,?,?,?,?)")
 
 let select_state = db.prepare("select state from game_state where game_id=?").pluck()
 let update_state = db.prepare("update game_state set state=? where game_id=?")
@@ -197,6 +197,8 @@ function patch_game(game_id, {validate_actions=true, save_snaps=true, delete_und
 	try {
 		let old_active = null
 		let need_to_rewrite = false
+		let last_log_length = 0
+		let snap_id = start_snap_id
 
 		for (let i = 0; i < replay.length; ++i) {
 			let item = replay[i]
@@ -243,11 +245,22 @@ function patch_game(game_id, {validate_actions=true, save_snaps=true, delete_und
 
 			// if (verbose) console.log("\t", state?.active ?? "None", state?.state ?? state?.L?.P)
 
+			item.log_length = state.log.length
 			item.state = snapshot(state)
 			item.checksum = crc32c(item.state)
 			if (!dont_snap(rules, state, old_active))
-				item.save = 1
+				item.snap_id = ++snap_id
 			old_active = state.active
+
+			if (item.action !== "undo" && item.log_length < last_log_length) {
+				for (let k = 0; k < i; ++k) {
+					if (replay[k].snap_id && replay[k].log_length > item.log_length) {
+						console.log("INVALIDATE SNAP", replay[k].snap_id)
+						replay[k].snap_id = 0
+					}
+				}
+			}
+			last_log_length = item.log_length
 
 			if (delete_undo) {
 				if (item.action === "undo") {
@@ -277,10 +290,9 @@ function patch_game(game_id, {validate_actions=true, save_snaps=true, delete_und
 
 		if (save_snaps) {
 			delete_snap.run(game_id, start_snap_id)
-			let snap_id = start_snap_id
 			for (let item of replay)
-				if (item.save)
-					insert_snap.run(game_id, ++snap_id, item.replay_id, item.state)
+				if (item.snap_id)
+					insert_snap.run(game_id, item.snap_id, item.replay_id, item.log_length, item.state)
 		}
 
 		update_active.run(String(state.active), game_id)
