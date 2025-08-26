@@ -111,16 +111,14 @@ function eval_action(s, item, p) {
 	switch (item_action) {
 	case ".setup":
 		return rules.setup(item_arguments[0], item_arguments[1], item_arguments[2])
+	case ".timeout":
 	case ".resign":
 		if (params.mode === "debug")
 			s.log.push([p, item_role.substring(0,2), item_action, null])
 
 		let result = "None"
-		if (roles.length === 2) {
-			for (let r of roles)
-				if (r !== item_role)
-					result = r
-		}
+		if (roles.length >= 2)
+			result = roles.filter(r !== result).join(", ")
 
 		s = finish_game_state(s, result, item_role + " resigned.")
 

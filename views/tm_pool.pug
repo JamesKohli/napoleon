@@ -84,10 +84,9 @@ html
 													if ix > 0
 														| &nbsp;
 													if gs[1] === null
-														if games.find(game => game.game_id === gs[0]).is_abandoned
-															a.black(href="/join/" + gs[0]) &#xd7;
-														else
-															a.black(href="/join/" + gs[0]) &minus;
+														a.black(href="/join/" + gs[0]) &minus;
+													else if gs[1] === 0 && games.find(game => game.game_id === gs[0]).is_abandoned
+														a.black(href="/join/" + gs[0]) &#xd7;
 													else
 														a.black(href="/join/" + gs[0])= gs[1]
 								td.r= row.points
@@ -119,10 +118,9 @@ html
 								each gs in result
 									td.c
 										if gs[1] === null
-											if games.find(game => game.game_id === gs[0]).is_abandoned
-												a.black(href="/join/" + gs[0]) &#xd7;
-											else
-												a.black(href="/join/" + gs[0]) &minus;
+											a.black(href="/join/" + gs[0]) &minus;
+										else if gs[1] === 0 && games.find(game => game.game_id === gs[0]).is_abandoned
+											a.black(href="/join/" + gs[0])= games.find(game => game.game_id === gs[0])
 										else
 											a.black(href="/join/" + gs[0])= gs[1]
 								td.r= row.points
@@ -156,16 +154,10 @@ html
 
 								if game.status > 1
 									td.w.r
-										if game.is_abandoned
-											| None
-										else
-											each role, ix in roles
-												if ix > 0
-													| &nbsp;:&nbsp;
-												if role_scores[role] === null
-													| &#xd7;
-												else
-													| #{role_scores[role]}
+										each role, ix in roles
+											if ix > 0
+												| &nbsp;:&nbsp;
+											| #{role_scores[role]}
 								else
 									td.r
 								if game.status > 0

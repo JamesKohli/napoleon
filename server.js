@@ -2869,7 +2869,7 @@ function time_control_ticker() {
 
 	for (let item of games_to_timeout) {
 		if (item.is_opposed) {
-			do_timeout(item.game_id, item.role, item.role + " timed out.")
+			do_resign(item.game_id, item.role, ".timeout", item.role + " timed out.")
 		}
 	}
 }
@@ -3078,7 +3078,7 @@ const TM_SELECT_GAMES = SQL(`
 		tm_rounds.*,
 		games.status,
 		games.moves,
-		games.status > 1 and games.result = 'None' as is_abandoned,
+		games.status > 1 and games.moves < games.player_count as is_abandoned,
 		json_group_object(role, coalesce(name, 'null')) as role_names,
 		json_group_object(role, score) as role_scores
 	from
@@ -3850,37 +3850,27 @@ function on_action(socket, action, args, cookie) {
 function on_resign(socket) {
 	SLOG(socket, "RESIGN")
 	try {
-		do_resign(socket.game_id, socket.role)
+		do_resign(socket.game_id, socket.role, ".resign", socket.role + " resigned.")
 	} catch (err) {
 		console.log(err)
 		return send_message(socket, "error", err.toString())
 	}
 }
 
-function do_timeout(game_id, role) {
-	let game = SQL_SELECT_GAME.get(game_id)
-	let state = get_game_state(game_id)
-	let old_active = String(state.active)
-	state = finish_game_state(game.title_id, state, "None", role + " timed out.")
-	put_new_state(game.title_id, game_id, state, old_active, role, ".timeout", null, 0)
-}
-
-function do_resign(game_id, role) {
+function do_resign(game_id, role, replay_action, message) {
 	let game = SQL_SELECT_GAME.get(game_id)
 	let state = get_game_state(game_id)
 	let old_active = String(state.active)
 
 	let result = "None"
-	if (game.player_count === 2) {
+	if (game.player_count > 1) {
 		let roles = get_game_roles(game.title_id, game.scenario, game.options)
-		for (let r of roles)
-			if (r !== role)
-				result = r
+		result = roles.filter(r => r !== role).join(", ")
 	}
 
-	state = finish_game_state(game.title_id, state, result, role + " resigned.")
+	state = finish_game_state(game.title_id, state, result, message)
 
-	put_new_state(game.title_id, game_id, state, old_active, role, ".resign", result, 0)
+	put_new_state(game.title_id, game_id, state, old_active, role, replay_action, result, 0)
 }
 
 function finish_game_state(title_id, state, result, message) {

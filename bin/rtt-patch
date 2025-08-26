@@ -215,13 +215,13 @@ function patch_game(game_id, {validate_actions=true, save_snaps=true, delete_und
 			case ".setup":
 				state = rules.setup(...args)
 				break
-			case ".timeout":
-				finish_game(rules, state, "None", item.role + " timed out.")
-				break
 			case ".abandon":
 				finish_game(rules, state, "None", item.role + " abandoned the game.")
 			case ".resign":
 				finish_game(rules, state, get_resign_result(roles, item.role), item.role + " resigned.")
+				break
+			case ".timeout":
+				finish_game(rules, state, get_resign_result(roles, item.role), item.role + " timed out.")
 				break
 			default:
 				if (validate_actions) {
