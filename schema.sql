@@ -121,8 +121,8 @@ create view user_login_view as
 		left join user_password using(user_id)
 	;
 
-drop view if exists user_move_iqr;
-create view user_move_iqr as
+drop view if exists user_move_iqr_view;
+create view user_move_iqr_view as
 	with
 		aa as (
 			select
@@ -144,77 +144,16 @@ create view user_move_iqr as
 				quartile,
 				last_value(minutes) over (partition by user_id order by quartile) as minutes
 			from bb
-			where quartile < 3
 			group by user_id, quartile
 		)
 	select
 		user_id,
 		sum(minutes) filter (where quartile = 0) as q1,
 		sum(minutes) filter (where quartile = 1) as q2,
-		sum(minutes) filter (where quartile = 2) as q3
+		sum(minutes) filter (where quartile = 2) as q3,
+		sum(minutes) filter (where quartile = 3) as q4
 	from cc
 	group by user_id
-	;
-
-drop view if exists user_profile_view;
-create view user_profile_view as
-	with
-		timeout as (
-			select
-				user_id,
-				count(1) as timeout_total,
-				max(time) as timeout_last
-			from
-				user_timeout
-			group by
-				user_id
-		),
-		user_move_mean as (
-			select
-				user_id,
-				sum(minutes * frequency) / sum(frequency) as move_time_mean
-			from
-				user_move_hist
-			group by
-				user_id
-		),
-		profile as (
-			select
-				user_id, name, mail, notify, ctime, atime, about, is_banned,
-				vacation,
-				move_time_mean,
-				coalesce(q1, q2, q3) as move_time_q1,
-				coalesce(q2, q3) as move_time_q2,
-				q3 as move_time_q3,
-				coalesce(timeout_total, 0) as timeout_total,
-				coalesce(timeout_last, 0) as timeout_last
-			from
-				users
-				left join user_first_seen using(user_id)
-				left join user_last_seen using(user_id)
-				left join user_about using(user_id)
-				left join user_vacation using(user_id)
-				left join timeout using(user_id)
-				left join user_move_mean using(user_id)
-				left join user_move_iqr using(user_id)
-		)
-		select
-			profile.*,
-			(
-				select
-					count(1)
-				from
-					players
-					join games using(game_id)
-				where
-					players.user_id = profile.user_id
-					and games.is_opposed
-					and games.status > 1
-					and games.result != 'None'
-					and games.mtime > timeout_last
-			) as games_since_timeout
-		from
-			profile
 	;
 
 drop view if exists user_dynamic_view;

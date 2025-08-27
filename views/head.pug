@@ -213,19 +213,20 @@ mixin tourlist(seeds, pools, fin)
 				div
 					+poollist(fin, "Finished", TM_ICON_FINISHED)
 
-mixin userstats(who, ratings)
-		if (who.move_time_mean !== null)
+mixin userstats(who, move_time, timeouts, ratings)
+		if (move_time.mean !== null)
 			h3 Response time
-			div Average response time: #{format_minutes(who.move_time_mean)}
-			if (who.move_time_q2 !== null)
-				div Median response time: #{format_minutes(who.move_time_q2)}
-			if (who.move_time_q1 !== null && who.move_time_q2 !== null)
-				div Middle half of response times: #{format_minutes(who.move_time_q1)} to #{format_minutes(who.move_time_q3)}
+			div Average move time: #{format_minutes(move_time.mean)}
+			if (move_time.q2 !== null)
+				div Median move time: #{format_minutes(move_time.q2)}
+			if (move_time.q1 !== null && move_time.q2 !== null)
+				div Middle half of move times: #{format_minutes(move_time.q1)} to #{format_minutes(move_time.q3)}
 
 		h3 Timeouts
 		div Vacation days remaining: #{who.vacation}
-		div Total number of timeouts: #{who.timeout_total}
-		div Games completed since last timeout: #{who.games_since_timeout}
+		if timeouts.timeout_total
+			div Total number of timeouts: #{timeouts.timeout_total}
+			div Games completed since last timeout: #{timeouts.games_since_timeout}
 
 		if ratings.length > 0
 			h3 Most played games

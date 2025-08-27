@@ -471,10 +471,65 @@ const SQL_SELECT_LOGIN_BY_NAME = SQL("SELECT * FROM user_login_view WHERE name=?
 
 const SQL_SELECT_USER_VIEW = SQL("SELECT * FROM user_view WHERE user_id=?")
 const SQL_SELECT_USER_BY_NAME = SQL("SELECT * FROM user_view WHERE name=?")
-const SQL_SELECT_USER_PROFILE = SQL("SELECT * FROM user_profile_view WHERE name=?")
 const SQL_SELECT_USER_DYNAMIC = SQL("select * from user_dynamic_view where user_id=?")
 const SQL_SELECT_USER_ID = SQL("SELECT user_id FROM users WHERE name=?").pluck()
 const SQL_SELECT_USER_BY_SEARCH = SQL("select name, atime from users left join user_last_seen using(user_id) where name like ? order by name")
+
+const SQL_SELECT_USER_PROFILE = SQL(`
+	select *
+	from users
+	left join user_first_seen using(user_id)
+	left join user_last_seen using(user_id)
+	left join user_about using(user_id)
+	left join user_vacation using(user_id)
+	where name = ?
+`)
+
+const SQL_SELECT_USER_MOVE_TIME = SQL(`
+	with
+		cte_hist as ( select minutes, frequency from user_move_hist where user_id = ? ),
+		cte_total as ( select sum(frequency) as total from cte_hist ),
+		cte_run_1 as ( select minutes, 4 * sum(frequency) over (order by minutes) / (total+1) as quartile from cte_hist, cte_total ),
+		cte_run_2 as ( select quartile, last_value(minutes) over (order by quartile) as minutes from cte_run_1 group by quartile ),
+		cte_iqr as (
+			select
+				sum(minutes) filter (where quartile = 0) as q1,
+				sum(minutes) filter (where quartile = 1) as q2,
+				sum(minutes) filter (where quartile = 2) as q3,
+				sum(minutes) filter (where quartile = 3) as q4
+			from cte_run_2
+		)
+	select
+		( select sum(minutes * frequency) / sum(frequency) from cte_hist ) as mean,
+		coalesce(q1, q2, q3, q4) as q1,
+		coalesce(q2, q3, q4) as q2,
+		coalesce(q3, q4) as q3
+	from
+		cte_iqr
+`)
+
+const SQL_SELECT_USER_TIMEOUTS = SQL(`
+	with cte_timeout as (
+		select
+			user_id,
+			count(1) as timeout_total,
+			coalesce(max(time), 0) as timeout_last
+		from
+			user_timeout
+		where user_id = ?
+	)
+	select
+		user_id,
+		timeout_total,
+		timeout_last,
+		sum(games.mtime > timeout_last) as games_since_timeout
+	from
+		cte_timeout
+		left join players using(user_id)
+		left join games using(game_id)
+	where
+		status > 1 and is_opposed and moves >= player_count * 3
+`)
 
 const SQL_SELECT_USER_ABOUT = SQL("SELECT about FROM user_about WHERE user_id=?").pluck()
 const SQL_SELECT_USER_NOTIFY = SQL("SELECT notify FROM users WHERE user_id=?").pluck()
@@ -856,6 +911,8 @@ app.post("/account/change-about", must_be_logged_in, function (req, res) {
 app.get("/user/:who_name", function (req, res) {
 	let who = SQL_SELECT_USER_PROFILE.get(req.params.who_name)
 	if (who) {
+		let move_time = SQL_SELECT_USER_MOVE_TIME.get(who.user_id)
+		let timeouts = SQL_SELECT_USER_TIMEOUTS.get(who.user_id)
 		let games = QUERY_LIST_PUBLIC_GAMES_OF_USER.all({ user_id: who.user_id })
 		let ratings = SQL_USER_RATINGS.all(who.user_id)
 		annotate_games(games, 0, null, null)
@@ -867,6 +924,8 @@ app.get("/user/:who_name", function (req, res) {
 		res.render("user.pug", {
 			user: req.user,
 			who,
+			move_time,
+			timeouts,
 			relation,
 			games,
 			active_pools,
@@ -1717,13 +1776,15 @@ app.get("/profile", function (req, res) { res.redirect(301, "/account") })
 
 app.get("/account", must_be_logged_in, function (req, res) {
 	var who = SQL_SELECT_USER_PROFILE.get(req.user.name)
+	var move_time = SQL_SELECT_USER_MOVE_TIME.get(who.user_id)
+	var timeouts = SQL_SELECT_USER_TIMEOUTS.get(who.user_id)
 	var mail = {
 		notify: SQL_SELECT_USER_NOTIFY.get(req.user.user_id),
 		is_verified: SQL_SELECT_USER_VERIFIED.get(req.user.user_id)
 	}
 	var webhook = SQL_SELECT_WEBHOOK.get(req.user.user_id)
 	var ratings = SQL_USER_RATINGS.all(req.user.user_id)
-	res.render("account_index.pug", { who, mail, webhook, ratings })
+	res.render("account_index.pug", { who, move_time, timeouts, mail, webhook, ratings })
 })
 
 app.get("/games", function (_req, res) {
