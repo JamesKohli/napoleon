@@ -528,7 +528,7 @@ const SQL_SELECT_USER_TIMEOUTS = SQL(`
 		left join players using(user_id)
 		left join games using(game_id)
 	where
-		status > 1 and is_opposed and moves >= player_count * 3
+		status > 1 and is_opposed and moves >= player_count * 2
 `)
 
 const SQL_SELECT_USER_ABOUT = SQL("SELECT about FROM user_about WHERE user_id=?").pluck()
@@ -2133,7 +2133,7 @@ app.get("/join/:game_id", function (req, res) {
 		return res.status(404).send("Invalid game ID.")
 
 	if (ENABLE_ARCHIVE) {
-		if (game.status === STATUS_ARCHIVED && game.moves >= game.player_count * 3)
+		if (game.status === STATUS_ARCHIVED && game.moves >= game.player_count * 2)
 			game.status = STATUS_FINISHED
 	}
 
@@ -2824,7 +2824,7 @@ const QUERY_PURGE_FINISHED_GAMES = SQL(`
 	where
 		status > 1
 		and not is_match
-		and ( not is_opposed or moves < player_count * 3 )
+		and ( not is_opposed or moves < player_count * 2 )
 		and julianday(mtime) < julianday('now', '-10 days')
 `)
 

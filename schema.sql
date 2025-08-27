@@ -219,7 +219,7 @@ create view rated_games_view as
 		games
 	where
 		status > 1
-		and moves >= player_count * 3
+		and moves >= player_count * 2
 		and user_count = player_count
 		and player_count > 1
 		and not exists (
