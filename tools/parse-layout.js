@@ -234,7 +234,14 @@ function emit() {
 		}
 	}
 
-	console.log("const layout = {")
+	if (edges.length > 0) {
+		console.log("const layout = {}")
+		console.log()
+		console.log("layout.nodes = {")
+	} else {
+		console.log("const layout = {")
+	}
+
 	if (groups.length > 0) {
 		var grouped_nodes = Object.groupBy(nodes, x => x.group)
 		for (var key in grouped_nodes) {
@@ -250,15 +257,34 @@ function emit() {
 	console.log("}")
 
 	if (edges.length > 0) {
-		console.log()
-		console.log("const edges = [")
-		for (let e of edges) {
-			let n1 = find_closest_node(e.x1, e.y1)
-			let n2 = find_closest_node(e.x2, e.y2)
-			console.log(`\t["${n1}","${n2}",${e.x1|0},${e.y1|0},${e.x2|0},${e.y2|0}],`)
+		if (groups.length > 0) {
+			console.log()
+			console.log("layout.edges = {")
+			var grouped_edges = Object.groupBy(edges, x => x.group)
+			for (var key in grouped_edges) {
+				console.log("\t\"" + key + "\": [")
+				for (let e of grouped_edges[key]) {
+					let n1 = find_closest_node(e.x1, e.y1)
+					let n2 = find_closest_node(e.x2, e.y2)
+					console.log(`\t\t["${n1}","${n2}",${e.x1|0},${e.y1|0},${e.x2|0},${e.y2|0}],`)
+				}
+				console.log("\t],")
+			}
+			console.log("}")
+		} else {
+			console.log()
+			console.log("layout.edges = [")
+			for (let e of edges) {
+				let n1 = find_closest_node(e.x1, e.y1)
+				let n2 = find_closest_node(e.x2, e.y2)
+				console.log(`\t["${n1}","${n2}",${e.x1|0},${e.y1|0},${e.x2|0},${e.y2|0}],`)
+			}
+			console.log("]")
 		}
-		console.log("]")
 	}
+
+	console.log()
+	console.log(`if (typeof module !== "undefined") module.exports = layout`)
 }
 
 if (process.argv.length < 3) {
