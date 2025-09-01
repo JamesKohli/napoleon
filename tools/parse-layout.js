@@ -92,10 +92,12 @@ function parse_path_data(path) {
 			break
 		case 'H':
 			x2 = cx = Number(path[i+1])
+			y2 = cy
 			i += 2
 			abs = true
 			break
 		case 'V':
+			x2 = cx
 			y2 = cy = Number(path[i+1])
 			i += 2
 			abs = true
@@ -111,10 +113,12 @@ function parse_path_data(path) {
 			break
 		case 'h':
 			x2 = cx = cx + Number(path[i+1])
+			y2 = cy
 			i += 2
 			abs = false
 			break
 		case 'v':
+			x2 = cx
 			y2 = cy = cy + Number(path[i+1])
 			i += 2
 			abs = false
