@@ -4232,7 +4232,7 @@ app.get("/docs/:dir/:file", function (req, res) {
 const SQL_GAME_STATS = SQL(`
 	select
 		title_id, player_count, scenario,
-		group_concat(result, '%') as result_role,
+		group_concat(final_result, '%') as result_role,
 		group_concat(n, '%') as result_count,
 		sum(n) as total
 	from
@@ -4241,7 +4241,7 @@ const SQL_GAME_STATS = SQL(`
 				title_id,
 				player_count,
 				scenario,
-				result,
+				case when instr(result, ',') > 0 then 'Tie' else result end as final_result,
 				count(1) as n
 			from
 				rated_games_view
@@ -4251,8 +4251,9 @@ const SQL_GAME_STATS = SQL(`
 				title_id,
 				player_count,
 				scenario,
-				result
+				final_result
 			order by
+				case final_result when 'Tie' then 1 when 'Draw' then 1 else 0 end,
 				n desc
 		)
 	group by
