@@ -138,6 +138,7 @@ function parse_path_data(path) {
 }
 
 function parse_svg(filename) {
+	mode = null
 	for (let line of fs.readFileSync(filename, "utf-8").split("\n")) {
 		line = line.trim()
 		if (line.startsWith("<g")) {
