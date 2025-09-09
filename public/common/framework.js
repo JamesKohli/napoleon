@@ -725,7 +725,7 @@ function set_add(set, item) {
 	var b = set.length - 1
 	// optimize fast case of appending items in order
 	if (item > set[b]) {
-		set.push(item)
+		set[b+1] = item
 		return
 	}
 	while (a <= b) {

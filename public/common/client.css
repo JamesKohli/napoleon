@@ -221,7 +221,7 @@ header.replay {
 	background-image: repeating-linear-gradient(45deg, gainsboro, gainsboro 40px, silver 40px, silver 80px);
 }
 
-header.watching #prompt:before {
+header.watching #prompt::before {
 	content: "You are watching!\a0\a0";
 	font-style: italic;
 }
