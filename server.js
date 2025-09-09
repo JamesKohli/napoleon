@@ -1402,9 +1402,19 @@ function unload_module(filename) {
 }
 
 function load_rules(rules_dir, rules_file, title) {
-	RULES[title.title_id] = require(rules_file)
 	title.about_html = fs.readFileSync(rules_dir + "/about.html")
 	title.create_html = fs.readFileSync(rules_dir + "/create.html")
+	try {
+		RULES[title.title_id] = require(rules_file)
+	} catch (error) {
+		RULES[title.title_id] = {
+			roles: RULES[title.title_id]?.roles ?? [ "ERROR" ],
+			scenarios: RULES[title.title_id]?.scenarios ?? [ "ERROR" ],
+			view() {
+				throw error
+			}
+		}
+	}
 }
 
 function watch_rules(rules_dir, rules_file, title) {
