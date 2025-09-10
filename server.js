@@ -2648,9 +2648,9 @@ function send_chat_activity_notification(game_id, p) {
 function send_vacation_notification(user, vacation) {
 	var message
 	if (vacation > 0)
-		message = "You have used one vacation day -- ${vacation} left!"
+		message = `You have used one vacation day -- ${vacation} left!`
 	else
-		message = "You have used your last vacation day!"
+		message = `You have used your last vacation day!`
 	send_notification(user, SITE_URL + "/account", message)
 }
 
