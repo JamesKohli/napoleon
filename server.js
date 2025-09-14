@@ -1407,6 +1407,7 @@ function load_rules(rules_dir, rules_file, title) {
 	try {
 		RULES[title.title_id] = require(rules_file)
 	} catch (error) {
+		console.error(error)
 		RULES[title.title_id] = {
 			roles: RULES[title.title_id]?.roles ?? [ "ERROR" ],
 			scenarios: RULES[title.title_id]?.scenarios ?? [ "ERROR" ],
