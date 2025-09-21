@@ -687,7 +687,7 @@ function update_log(change_start, end) {
 		if (params.mode === "debug" && typeof text === "object") {
 			let entry = document.createElement("a")
 			entry.href = "#" + text[0]
-			if (text[3] !== null)
+			if (text[3] !== null && text[3] !== undefined)
 				entry.textContent = "\u25b6 " + text[1] + " " + text[2] + " " + text[3]
 			else
 				entry.textContent = "\u25b6 " + text[1] + " " + text[2]
