@@ -582,16 +582,20 @@ function connect_play() {
 		case "state":
 			game_cookie = msg_data[2]
 
-			if (snap_view)
-				on_snap_stop()
-
 			view = arg
 
 			game_log.length = view.log_start
 			for (let line of view.log)
 				game_log.push(line)
 
-			update_view(view.log_start, game_log.length)
+			// keep showing current snapshot
+			if (snap_view) {
+				snap_view = null
+				show_snap(snap_this)
+			} else {
+				update_view(view.log_start, game_log.length)
+			}
+
 			break
 
 		case "finished":
