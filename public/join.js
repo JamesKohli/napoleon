@@ -105,7 +105,7 @@ function option_to_english(k) {
 	if (k === false)
 		return "no"
 	if (typeof k === "string")
-		return k.replace(/_/g, " ").replace(/^\w/, (c) => c.toUpperCase())
+		return k.replace(/_/g, " ")
 	return k
 }
 

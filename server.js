@@ -1354,7 +1354,7 @@ function option_to_english(k) {
 	if (k === false)
 		return "no"
 	if (typeof k === "string")
-		return k.replace(/_/g, " ").replace(/^\w/, (c) => c.toUpperCase())
+		return k.replace(/_/g, " ")
 	return k
 }
 
@@ -1954,6 +1954,7 @@ function options_json_replacer(key, value) {
 	if (key === "pace") return undefined
 	if (key === "is_random") return undefined
 	if (key === "is_private") return undefined
+	if (value === "on") return true
 	if (value === "true") return true
 	if (value === "false") return false
 	if (value === "")
