@@ -977,7 +977,7 @@ add_replay_button("replay_step_prev", null).classList.add("hide")
 add_replay_button("replay_step_next", null).classList.add("hide")
 add_replay_button("replay_next", on_snap_next)
 add_replay_button("replay_last", null).classList.add("hide")
-add_replay_button("replay_play", on_snap_stop)
+add_replay_button("replay_play", on_snap_penultimate_or_stop)
 add_replay_button("replay_stop", null).classList.add("hide")
 
 function request_snap(snap_id, skip) {
@@ -999,6 +999,17 @@ function show_snap(snap_id) {
 	view = snap_cache[snap_id]
 	view.prompt = "Replay " + snap_id + " / " + snap_count + " \u2013 " + snap_active[snap_id]
 	update_view(view.log, view.log)
+}
+
+function on_snap_penultimate_or_stop() {
+	if (snap_view)
+		on_snap_stop()
+	else
+		on_snap_penultimate()
+}
+
+function on_snap_penultimate() {
+	request_snap(snap_count - 1, on_snap_prev)
 }
 
 function on_snap_first() {
@@ -1028,6 +1039,40 @@ function on_snap_stop() {
 		update_view(game_log.length, game_log.length)
 	}
 }
+
+window.addEventListener("keydown", (evt) => {
+	if (!(document.activeElement instanceof HTMLInputElement)) {
+		if (evt.key === " ") {
+			if (!evt.repeat)
+				on_snap_penultimate()
+			evt.preventDefault()
+		}
+	}
+})
+
+window.addEventListener("keyup", (evt) => {
+	if (!(document.activeElement instanceof HTMLInputElement)) {
+		switch (evt.key) {
+		case " ":
+		case ">":
+			on_snap_stop()
+			evt.preventDefault()
+			break
+		case "<":
+			on_snap_first()
+			evt.preventDefault()
+			break
+		case ",":
+			on_snap_prev()
+			evt.preventDefault()
+			break
+		case ".":
+			on_snap_next()
+			evt.preventDefault()
+			break
+		}
+	}
+})
 
 /* SHIFT KEY CSS TOGGLE */
 
