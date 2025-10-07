@@ -1040,54 +1040,60 @@ function on_snap_stop() {
 	}
 }
 
-window.addEventListener("keydown", (evt) => {
-	if (!(document.activeElement instanceof HTMLInputElement)) {
-		if (evt.key === " ") {
-			if (!evt.repeat)
-				on_snap_penultimate()
-			evt.preventDefault()
-		}
-	}
-})
+/* KEY BINDINGS */
 
-window.addEventListener("keyup", (evt) => {
-	if (!(document.activeElement instanceof HTMLInputElement)) {
-		switch (evt.key) {
-		case " ":
-		case ">":
+window.addEventListener("keydown", (evt) => {
+	if (document.activeElement instanceof HTMLInputElement)
+		return
+	if (document.activeElement instanceof HTMLTextAreaElement)
+		return
+	switch (evt.key) {
+	case "Shift":
+		if (!evt.repeat)
+			document.body.classList.add("shift")
+		evt.preventDefault()
+		break
+	case " ":
+		if (!evt.repeat)
+			on_snap_penultimate()
+		evt.preventDefault()
+		break
+	case ">":
+		if (!evt.repeat)
 			on_snap_stop()
-			evt.preventDefault()
-			break
-		case "<":
+		evt.preventDefault()
+		break
+	case "<":
+		if (!evt.repeat)
 			on_snap_first()
-			evt.preventDefault()
-			break
-		case ",":
-			on_snap_prev()
-			evt.preventDefault()
-			break
-		case ".":
-			on_snap_next()
-			evt.preventDefault()
-			break
-		}
+		evt.preventDefault()
+		break
+	case ",":
+		on_snap_prev()
+		evt.preventDefault()
+		break
+	case ".":
+		on_snap_next()
+		evt.preventDefault()
+		break
 	}
 })
 
-/* SHIFT KEY CSS TOGGLE */
-
-window.addEventListener("keydown", (evt) => {
-	if (document.activeElement === document.getElementById("chat_input"))
-		return
-	if (document.activeElement === document.getElementById("notepad_input"))
-		return
-	if (evt.key === "Shift")
-		document.body.classList.add("shift")
-})
-
 window.addEventListener("keyup", (evt) => {
-	if (evt.key === "Shift")
+	if (document.activeElement instanceof HTMLInputElement)
+		return
+	if (document.activeElement instanceof HTMLTextAreaElement)
+		return
+	switch (evt.key) {
+	case "Shift":
 		document.body.classList.remove("shift")
+		evt.preventDefault()
+		break
+	case " ":
+		on_snap_stop()
+		evt.preventDefault()
+		break
+	}
 })
 
 window.addEventListener("blur", function (evt) {
