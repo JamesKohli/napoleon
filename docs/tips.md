@@ -12,6 +12,8 @@ then stay in the game for a while and perhaps you can play live for a bit.
 When playing live, let your opponents know if you're going away!
 If you need to resume a live game another day, schedule a time when you can continue.
 
+Open a separate browser tab or window for each side when playing solo.
+
 ## Shortcuts
 
 There are several ways to scroll without the scroll bars:
@@ -35,8 +37,19 @@ Hold down the <kbd>Shift</kbd> key to see more information.
 In some games cards and chits will be magnified when mousing over them when holding shift.
 Other games may reveal the reverse side of pieces.
 
-Open a separate browser tab or window for each side when playing solo.
+Use keyboard shortcuts to quickly navigate the replay:
 
+* <kbd>1</kbd> ... <kbd>0</kbd> to quickly jump to points in time (1 is the first move, 0 is the last)
+* <kbd>,</kbd> (comma) to go back one move
+* <kbd>.</kbd> (period) to go forward one move
+* Hold down <kbd>Space</kbd> to see the previous move
+
+In the "Sherlock" review mode the above key-bindings behave slightly different:
+
+* <kbd>&lt;</kbd> to go to the previous move
+* <kbd>&gt;</kbd> to go to the next move
+* <kbd>,</kbd> (comma) to go back one action
+* <kbd>.</kbd> (period) to go forward one action
 
 ## Toolbar
 

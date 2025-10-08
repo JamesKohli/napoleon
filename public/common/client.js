@@ -1040,12 +1040,18 @@ function on_snap_stop() {
 	}
 }
 
+function on_snap_ninth(target) {
+	request_snap(Math.floor(target * snap_count / 9), on_snap_next)
+}
+
 /* KEY BINDINGS */
 
-window.addEventListener("keydown", (evt) => {
+window.addEventListener("keydown", function (evt) {
 	if (document.activeElement instanceof HTMLInputElement)
 		return
 	if (document.activeElement instanceof HTMLTextAreaElement)
+		return
+	if (evt.altKey || evt.ctrlKey)
 		return
 	switch (evt.key) {
 	case "Shift":
@@ -1058,14 +1064,14 @@ window.addEventListener("keydown", (evt) => {
 			on_snap_penultimate()
 		evt.preventDefault()
 		break
-	case ">":
-		if (!evt.repeat)
-			on_snap_stop()
-		evt.preventDefault()
-		break
 	case "<":
 		if (!evt.repeat)
 			on_snap_first()
+		evt.preventDefault()
+		break
+	case ">":
+		if (!evt.repeat)
+			on_snap_stop()
 		evt.preventDefault()
 		break
 	case ",":
@@ -1076,10 +1082,22 @@ window.addEventListener("keydown", (evt) => {
 		on_snap_next()
 		evt.preventDefault()
 		break
+	case "0":
+		on_snap_stop()
+		evt.preventDefault()
+		break
+	case "1":
+		on_snap_first()
+		evt.preventDefault()
+		break
+	case "2": case "3": case "4": case "5": case "6": case "7": case "8": case "9":
+		on_snap_ninth(parseInt(evt.key) - 1)
+		evt.preventDefault()
+		break
 	}
 })
 
-window.addEventListener("keyup", (evt) => {
+window.addEventListener("keyup", function (evt) {
 	if (document.activeElement instanceof HTMLInputElement)
 		return
 	if (document.activeElement instanceof HTMLTextAreaElement)

@@ -243,6 +243,18 @@ function on_replay_jump_next() {
 	goto_replay(replay.length)
 }
 
+function on_replay_jump_ninth(target) {
+	var i, n
+	for (i = n = 0; i < replay.length; ++i)
+		if (replay[i].is_checkpoint)
+			++n
+	target = Math.floor(target * n / 9)
+	for (i = n = 0; i < replay.length && n < target; ++i)
+		if (replay[i].is_checkpoint)
+			++n
+	goto_replay(i)
+}
+
 let replay_timer = 0
 function on_replay_play_pause() {
 	if (replay_timer === 0) {
@@ -356,6 +368,47 @@ async function load_replay() {
 	document.getElementById("replay_last").onclick = on_replay_last
 	document.getElementById("replay_stop").onclick = on_replay_play_pause
 	document.getElementById("replay_play").onclick = on_replay_play_pause
+
+	window.addEventListener("keydown", function (evt) {
+		if (evt.altKey || evt.ctrlKey)
+			return
+		switch (evt.key) {
+		case "0":
+			on_replay_last()
+			evt.preventDefault()
+			break
+		case "1":
+			on_replay_first()
+			evt.preventDefault()
+			break
+		case "2": case "3": case "4": case "5": case "6": case "7": case "8": case "9":
+			on_replay_jump_ninth(parseInt(evt.key) - 1)
+			evt.preventDefault()
+			break
+		case " ":
+			on_replay_play_pause()
+			evt.preventDefault()
+			break
+		case "<":
+			if (!evt.repeat)
+				on_replay_jump_prev()
+			evt.preventDefault()
+			break
+		case ">":
+			if (!evt.repeat)
+				on_replay_jump_next()
+			evt.preventDefault()
+			break
+		case ",":
+			on_replay_step_prev()
+			evt.preventDefault()
+			break
+		case ".":
+			on_replay_step_next()
+			evt.preventDefault()
+			break
+		}
+	})
 }
 
 load_replay()
