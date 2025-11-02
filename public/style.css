@@ -366,6 +366,10 @@ div.body img {
 	line-height: 20px;
 }
 
+.game_info i {
+	word-break: break-word;
+}
+
 .game_item a { text-decoration: none; color: black; }
 .game_item a:hover { text-decoration: underline; }
 .game_item .game_main a:hover { color: blue; }
