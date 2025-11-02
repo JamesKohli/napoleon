@@ -10,14 +10,9 @@ html
 		include head
 		title= who.name
 		style.
-			.about {
-				white-space: pre-wrap;
-				font-style: italic;
-				padding: 8px 12px;
-				border: var(--thin-border);
-				box-shadow: var(--drop-shadow);
-				background-color: var(--color-text);
-			}
+			p.box.friend { background-color: honeydew; }
+			p.box.enemy { background-color: mistyrose; }
+			a.r { display: block; float: right; }
 	body
 		include header
 		article
@@ -30,17 +25,32 @@ html
 			p Last seen #{human_date(who.atime)}.
 
 			if user && (who.user_id !== user.user_id)
-				p
-					a(href="/message/send/"+who.name) Send message
-					br
-					if relation > 0
-						a(href="/contacts/remove/"+who.name) Remove from friends
-					else if relation < 0
-						a(href="/contacts/remove/"+who.name) Remove from blacklist
-					else
-						a(href="/contacts/add-friend/"+who.name) Add to friends
+				if contact
+					p
+						a(href="/message/send/"+who.name) Send message
 						br
-						a(href="/contacts/add-enemy/"+who.name) Add to blacklist
+						if contact.relation > 0
+							a(href="/contacts/remove/"+who.name) Remove from friends
+						if contact.relation < 0
+							a(href="/contacts/remove/"+who.name) Remove from blacklist
+
+					if contact.note
+						h3 Note:
+						if contact.relation > 0
+							p.box.friend
+								| #{contact.note}
+								a.black.r(href="/contacts/note/"+who.name) &#x270f;
+						else
+							p.box.enemy
+								| #{contact.note}
+								a.black.r(href="/contacts/note/"+who.name) &#x270f;
+					else
+						p
+							a(href="/contacts/note/"+who.name) Add note
+				else
+					a(href="/contacts/add-friend/"+who.name) Add to friends
+					br
+					a(href="/contacts/add-enemy/"+who.name) Add to blacklist
 
 			+userstats(who, move_time, timeouts, ratings)
 

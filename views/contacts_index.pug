@@ -14,11 +14,12 @@ html
 
 			h1 Friends &amp; Enemies
 
-			table.half.striped
+			table.wide.striped
 				thead
 					tr
 						th Friends
 						th Last seen
+						th
 						th
 				tbody
 					each who in friends
@@ -26,8 +27,9 @@ html
 							td
 								a.black(href="/user/"+who.name)= who.name
 							td.w= human_date(who.atime)
+							td: i= who.note
 							td.w.r
-								a.blue(href="/message/send/"+who.name) &#x1f4dd;
+								a.blue(href="/contacts/note/"+who.name) &#x270f;
 								a.red(href="/contacts/remove/"+who.name) &#x274c;
 					else
 						tr
@@ -36,17 +38,20 @@ html
 			if enemies.length > 0
 				p
 
-				table.half.striped
+				table.wide.striped
 					thead
 						tr
 							th Blacklist
+							th
 							th
 					tbody
 						each who in enemies
 							tr
 								td
 									a.black(href="/user/"+who.name)= who.name
+								td: i= who.note
 								td.r
+									a.blue(href="/contacts/note/"+who.name) &#x270f;
 									a.red(href="/contacts/remove/"+who.name) &#x274c;
 						else
 							tr

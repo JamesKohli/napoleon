@@ -267,6 +267,7 @@ create table if not exists contacts (
 	me integer,
 	you integer,
 	relation integer,
+	note text,
 	primary key (me, you)
 ) without rowid;
 
@@ -277,7 +278,8 @@ create view contact_view as
 		users.user_id,
 		users.name,
 		user_last_seen.atime,
-		contacts.relation
+		contacts.relation,
+		contacts.note
 	from
 		contacts
 		left join users on contacts.you = users.user_id

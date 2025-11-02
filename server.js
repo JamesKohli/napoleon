@@ -912,15 +912,15 @@ app.get("/user/:who_name", function (req, res) {
 		annotate_games(games, 0, null, null)
 		let active_pools = TM_POOL_LIST_USER_ACTIVE.all(who.user_id)
 		let finished_pools = TM_POOL_LIST_USER_RECENT_FINISHED.all(who.user_id)
-		let relation = 0
+		let contact = 0
 		if (req.user)
-			relation = SQL_SELECT_RELATION.get(req.user.user_id, who.user_id) | 0
+			contact = SQL_SELECT_CONTACT.get(req.user.user_id, who.user_id)
 		res.render("user.pug", {
 			user: req.user,
 			who,
 			move_time,
 			timeouts,
-			relation,
+			contact,
 			games,
 			active_pools,
 			finished_pools,
@@ -942,6 +942,8 @@ const SQL_SELECT_CONTACT_LIST = SQL("select * from contact_view where me=?")
 const SQL_INSERT_CONTACT = SQL("insert into contacts (me,you,relation) values (?,?,?)")
 const SQL_DELETE_CONTACT = SQL("delete from contacts where me=? and you=?")
 const SQL_SELECT_RELATION = SQL("select relation from contacts where me=? and you=?").pluck()
+const SQL_SELECT_CONTACT = SQL("select relation, note from contacts where me=? and you=?")
+const SQL_UPDATE_CONTACT_NOTE = SQL("update contacts set note=? where me=? and you=?")
 
 app.get("/contacts", must_be_logged_in, function (req, res) {
 	let contacts = SQL_SELECT_CONTACT_LIST.all(req.user.user_id)
@@ -950,6 +952,44 @@ app.get("/contacts", must_be_logged_in, function (req, res) {
 		friends: contacts.filter(user => user.relation > 0),
 		enemies: contacts.filter(user => user.relation < 0),
 	})
+})
+
+app.get("/contacts/note/:who_name", must_be_logged_in, function (req, res) {
+	let who = SQL_SELECT_USER_PROFILE.get(req.params.who_name)
+	if (who) {
+		let contact = SQL_SELECT_CONTACT.get(req.user.user_id, who.user_id)
+		if (contact) {
+			res.render("contacts_note.pug", {
+				user: req.user,
+				who,
+				contact
+			})
+		} else {
+			return res.status(404).send("User not in your contact list.")
+		}
+	} else {
+		return res.status(404).send("User not found.")
+	}
+})
+
+app.post("/contacts/note/:who_name", must_be_logged_in, function (req, res) {
+	let who = SQL_SELECT_USER_PROFILE.get(req.params.who_name)
+	if (who) {
+		let contact = SQL_SELECT_CONTACT.get(req.user.user_id, who.user_id)
+		if (contact) {
+			let note = req.body.note.trim()
+			if (note.length > 80)
+				note.length = 80
+			if (note.length === 0)
+				note = null
+			SQL_UPDATE_CONTACT_NOTE.run(note, req.user.user_id, who.user_id)
+			res.redirect("/user/" + who.name)
+		} else {
+			return res.status(404).send("User not in your contact list.")
+		}
+	} else {
+		return res.status(404).send("User not found.")
+	}
 })
 
 app.get("/contacts/remove/:who_name", must_be_logged_in, function (req, res) {
