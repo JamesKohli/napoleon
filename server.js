@@ -659,7 +659,7 @@ app.post("/signup", must_pass_altcha, function (req, res) {
 	let user = SQL_INSERT_USER.get(name, mail)
 	SQL_UPDATE_USER_FIRST_SEEN.run(user.user_id, ip)
 	SQL_UPDATE_USER_PASSWORD.run(user.user_id, hash, salt)
-	SQL_INSERT_USER_VACATION.run(user.user_id, 5)
+	SQL_INSERT_USER_VACATION.run(user.user_id, 0)
 	login_insert(res, user.user_id)
 	res.redirect("/account")
 })
