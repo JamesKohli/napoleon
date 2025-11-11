@@ -3207,65 +3207,92 @@ const TM_SELECT_PLAYERS_MP = SQL(`
 		points desc, son desc, name
 `)
 
-const TM_FIND_NEXT_GAME_TO_START = SQL(`
+const TM_FIND_NEXT_SEQUENTIAL_GAMES_TO_START = SQL(`
 	with
-		user_busy as (
-			select
-				pool_id, round, user_id, role
-			from
-				tm_rounds
-				join games using(game_id)
-				join players using(game_id)
-			where
-				status = 1
-		),
 		next_round as (
 			select
 				pool_id,
 				round,
 				coalesce(
-					lag( sum(status < 2) = 0 ) over ( partition by pool_id order by round ),
-					1
+					lag( sum(status > 1) > 0 ) over ( partition by pool_id order by round ),
+					true
 				) as is_round_ready
 			from
 				tm_rounds
 				join games using(game_id)
+				join tm_pools using(pool_id)
+				join tm_seeds using(seed_id)
+			where
+				not is_finished
+				and not is_concurrent
 			group by
 				pool_id, round
-		),
-		next_game as (
+		)
+		select
+			games.game_id,
+			games.title_id,
+			games.scenario,
+			games.options
+		from
+			next_round
+			join tm_rounds using(pool_id, round)
+			join games using(game_id)
+		where
+			is_round_ready
+			and status = 0
+`)
+
+const TM_FIND_NEXT_CONCURRENT_GAMES_TO_START = SQL(`
+	with
+		-- all future games in concurrent pools
+		pool_games as (
 			select
-				pool_id,
-				games.game_id,
-				games.title_id,
-				games.scenario,
-				games.options,
-				sum(
-					exists (
-						select 1 from user_busy
-							where user_busy.pool_id = tm_rounds.pool_id
-							and user_busy.round = tm_rounds.round
-							and user_busy.user_id = players.user_id
-							and user_busy.role = players.role
-					)
-				) = 0 as is_user_ready
+				pool_id, games.*
 			from
-				next_round
-				join tm_rounds using(pool_id, round)
+				tm_rounds
+				join games using(game_id)
+				join tm_pools using(pool_id)
+				join tm_seeds using(seed_id)
+			where
+				not is_finished
+				and is_concurrent
+				and status = 0
+		),
+		-- which players are busy with what roles in the pool
+		pool_players as (
+			select
+				pool_id, role, user_id, sum(status = 1) as n_busy
+			from
+				tm_rounds
 				join games using(game_id)
 				join players using(game_id)
-			where
-				status = 0 and is_round_ready
+			group by
+				pool_id, role, user_id
+		),
+		-- candidate games to start
+		candidates as (
+			select
+				pool_id,
+				game_id,
+				title_id,
+				scenario,
+				options
+			from
+				pool_games
+				join players using(game_id)
+				join pool_players using(pool_id, user_id, role)
 			group by
 				game_id
 			having
-				is_user_ready
+				sum(n_busy) < player_count
+			order by
+				sum(n_busy)
 		)
-	select
-		pool_id, game_id, title_id, scenario, options
-	from
-		next_game
-	limit 1
+		-- starting a game will change player availability for the other games in the same pool
+		-- select one candidate from each pool to start
+		select * from candidates a where a.game_id in (
+			select b.game_id from candidates b where a.pool_id = b.pool_id limit 1
+		)
 `)
 
 const TM_SELECT_ENDED_POOLS = SQL(`
@@ -3687,12 +3714,22 @@ function tm_start_ready_seeds() {
 
 function tm_start_ready_games() {
 	// start games that are ready
-	for (;;) {
-		let game = TM_FIND_NEXT_GAME_TO_START.get()
-		if (game)
+	var games, game
+
+	games = TM_FIND_NEXT_SEQUENTIAL_GAMES_TO_START.all()
+	if (games.length > 0) {
+		for (game of games)
 			start_game(game)
-		else
+	}
+
+	for (;;) {
+		games = TM_FIND_NEXT_CONCURRENT_GAMES_TO_START.all()
+		if (games.length > 0) {
+			for (game of games)
+				start_game(game)
+		} else {
 			break
+		}
 	}
 }
 

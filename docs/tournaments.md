@@ -8,8 +8,6 @@ Make sure you've turned on notifications so you don't miss the start!
 
 ## Time Control
 
-All tournament games use time control.
-
 If you let a tournament game time out, you will not be allowed to join future tournaments!
 
 ## Format
@@ -21,10 +19,9 @@ Everyone plays each side the same number of times.
 There may be a few exceptions to these rules in 3+ player games at certain
 player counts, but the system attempts to make the pairings as fair as possible.
 
-With sequential rounds you will only play one game at a time.
+Games in round two will start once at least one game in round one has finished, and so forth.
 
-With concurrent rounds you will play several games simultaneously;
-but never the same side in more than one game at a time.
+Everybody should have at least one game going at all times.
 
 ### Points
 
