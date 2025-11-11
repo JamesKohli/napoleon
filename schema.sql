@@ -960,7 +960,7 @@ begin
 			case old.pace
 				when 1 then 1
 				when 2 then 3
-				when 3 then 3
+				when 3 then 5
 				else 21
 			end
 		)
