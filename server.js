@@ -2874,6 +2874,21 @@ const SQL_ADD_VACATION_TIME = SQL(`
 		)
 `)
 
+function terminate_game(game, role, user_id) {
+	var result = get_resign_result(game, role)
+	SQL_FINISH_GAME.run(0, result, game.game_id)
+	SQL_INSERT_TIMEOUT.run(user_id, game.game_id)
+}
+
+function terminate_future_matches(game_id, user_id) {
+	var pool_id = TM_SELECT_POOL_BY_GAME.get(game_id)
+	var games_to_terminate = TM_SELECT_FUTURE_GAMES_IN_POOL.all(pool_id, user_id)
+	for (var game of games_to_terminate) {
+		console.log("TERMINATE " + game.game_id)
+		terminate_game(game, game.role, user_id)
+	}
+}
+
 function time_control_ticker() {
 	var users_on_vacation, games_to_timeout
 
@@ -2897,6 +2912,7 @@ function time_control_ticker() {
 					console.log("BANNED FROM TOURNAMENTS:", item.user_id)
 					TM_INSERT_BANNED.run(item.user_id)
 					TM_DELETE_QUEUE_USER.run(item.user_id)
+					terminate_future_matches(item.game_id, item.user_id)
 				}
 			} else {
 				console.log("TIMED OUT GAME:", item.game_id, item.role, "(solo)")
@@ -3122,6 +3138,17 @@ const TM_UPDATE_POOL_FINISHED = SQL("update tm_pools set is_finished=1, finish_d
 
 const TM_FIND_POOL_NAME = SQL("select pool_name from tm_rounds join tm_pools using(pool_id) where game_id=?").pluck()
 const TM_FIND_NEXT_POOL_NUMBER = SQL("select 1 + count(1) from tm_pools where seed_id = ? and level = ?").pluck()
+
+const TM_SELECT_POOL_BY_GAME = SQL("select pool_id from tm_rounds where game_id = ?").pluck()
+const TM_SELECT_FUTURE_GAMES_IN_POOL = SQL(`
+	select
+		game_id, title_id, scenario, options, role
+	from
+		tm_rounds
+		join games using(game_id)
+		join players using(game_id)
+	where pool_id = ? and user_id = ? and status = 0
+`)
 
 const TM_SELECT_GAMES = SQL(`
 	select
@@ -3957,16 +3984,20 @@ function on_resign(socket) {
 	}
 }
 
+function get_resign_result(game, role) {
+	if (game.player_count < 2)
+		return "None"
+	return get_game_roles(game.title_id, game.scenario, game.options)
+		.filter(r => r !== role)
+		.join(", ")
+}
+
 function do_resign(game_id, role, replay_action, message) {
 	let game = SQL_SELECT_GAME.get(game_id)
 	let state = get_game_state(game_id)
 	let old_active = String(state.active)
 
-	let result = "None"
-	if (game.player_count > 1) {
-		let roles = get_game_roles(game.title_id, game.scenario, game.options)
-		result = roles.filter(r => r !== role).join(", ")
-	}
+	let result = get_resign_result(game, role)
 
 	state = finish_game_state(game.title_id, state, result, message)
 
