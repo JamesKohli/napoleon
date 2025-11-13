@@ -3623,7 +3623,7 @@ function create_tournament_game(seed, pool_id, round, pool_name, players) {
 		seed.scenario,
 		seed.options,
 		seed.player_count,
-		2, // pace
+		seed.pace, // pace
 		0, // is_private
 		0, // is_random
 		pool_name, // notice
