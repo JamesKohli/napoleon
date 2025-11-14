@@ -1804,6 +1804,9 @@ function annotate_game_info(game, user_id, unread, unseen) {
 	if (game.is_ready && game.status === 1)
 		game.time_left = time_left
 
+	if (game.is_match)
+		game.seed = TM_SELECT_SEED_BY_GAME.get(game.game_id)
+
 	if (your_count > 0) {
 		game.is_yours = true
 		if (your_count === 1)
@@ -3138,6 +3141,14 @@ const TM_UPDATE_POOL_FINISHED = SQL("update tm_pools set is_finished=1, finish_d
 
 const TM_FIND_POOL_NAME = SQL("select pool_name from tm_rounds join tm_pools using(pool_id) where game_id=?").pluck()
 const TM_FIND_NEXT_POOL_NUMBER = SQL("select 1 + count(1) from tm_pools where seed_id = ? and level = ?").pluck()
+
+const TM_SELECT_SEED_BY_GAME = SQL(`
+	select pool_name, seed_notice
+	from tm_rounds
+	join tm_pools using(pool_id)
+	join tm_seeds using(seed_id)
+	where game_id = ?
+`)
 
 const TM_SELECT_POOL_BY_GAME = SQL("select pool_id from tm_rounds where game_id = ?").pluck()
 const TM_SELECT_FUTURE_GAMES_IN_POOL = SQL(`

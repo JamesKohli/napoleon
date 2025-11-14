@@ -677,6 +677,7 @@ create view game_replay_view as
 create table if not exists tm_seeds (
 	seed_id integer primary key,
 	seed_name text unique,
+	seed_notice text,
 
 	title_id text,
 	scenario text,

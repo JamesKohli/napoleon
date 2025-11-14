@@ -43,6 +43,11 @@ html
 						td #{seed.round_count} concurrent
 					else
 						td #{seed.round_count} sequential
+				if seed.seed_notice
+					tr
+						td Notice
+						td
+							i= seed.seed_notice
 
 			if seed.is_open || queues.some(q => q.length > 0)
 				each queue,ix in queues

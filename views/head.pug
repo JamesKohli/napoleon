@@ -124,7 +124,10 @@ mixin gamelist(list,hide_title=0)
 						div.game_info
 							if item.is_match
 								i
-									a(href="/tm/pool/"+item.notice)= item.notice
+									a(href="/tm/pool/"+item.seed.pool_name)= item.seed.pool_name
+									if item.status < 2 && item.seed.seed_notice
+										br
+										b= item.seed.seed_notice
 							else if item.notice
 								i= item.notice
 							else

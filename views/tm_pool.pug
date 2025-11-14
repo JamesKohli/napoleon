@@ -53,6 +53,11 @@ html
 					tr
 						td Finished
 						td= human_date(pool.finish_date)
+				if seed.seed_notice
+					tr
+						td Notice
+						td
+							i= seed.seed_notice
 
 			if seed.player_count === 2
 				table.wide
