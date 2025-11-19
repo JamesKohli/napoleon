@@ -2969,11 +2969,19 @@ const TM_DELETE_QUEUE_INACTIVE = SQL(`
 	)
 `)
 
-const TM_MAY_JOIN_ANY_SEED = SQL(`
+const TM_MAY_JOIN_ANY_SEED_LAX = SQL(`
 	select ( select notify and is_verified from users where user_id=@user_id )
 	or ( select exists ( select 1 from webhooks where user_id=@user_id and error is null ) )
 	or ( select exists ( select 1 from ratings where user_id=@user_id ) )
 	as may_join
+`).pluck()
+
+const TM_MAY_JOIN_ANY = SQL(`
+	select is_verified from users where user_id=?
+`).pluck()
+
+const TM_MAY_JOIN_TITLE = SQL(`
+	select exists ( select 1 from ratings where user_id=? and title_id=? )
 `).pluck()
 
 const TM_MAY_JOIN_SEED = SQL(`
@@ -3013,8 +3021,12 @@ function is_banned_from_tournaments(user_id) {
 	return TM_SELECT_BANNED.get(user_id)
 }
 
-function may_join_any_seed(user_id) {
-	return DEBUG || TM_MAY_JOIN_ANY_SEED.get({user_id})
+function may_join_any_seed(user_id, title_id) {
+	return DEBUG || TM_MAY_JOIN_ANY.get(user_id)
+}
+
+function may_join_title_seed(user_id, title_id) {
+	return DEBUG || TM_MAY_JOIN_TITLE.get(user_id, title_id)
 }
 
 function may_join_seed(seed_id) {
@@ -3387,7 +3399,9 @@ app.get("/tm/seed/:seed_name", function (req, res) {
 		if (is_banned_from_tournaments(req.user.user_id))
 			error = "You may not join any tournaments."
 		else if (!may_join_any_seed(req.user.user_id))
-			error = "Please verify your mail address and enable notifications to join tournaments."
+			error = "Verify your mail address to join this tournament."
+		else if (!may_join_title_seed(req.user.user_id, seed.title_id))
+			error = "You need to play more before you can join this tournament."
 		else if (!may_join_seed(seed_id))
 			error = "This tournament is closed."
 		else
