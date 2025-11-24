@@ -1433,6 +1433,7 @@ function get_game_static_view(title_id, state) {
 
 function unload_module(filename) {
 	// Remove a module and its dependencies from require.cache so they can be reloaded.
+	filename = require.resolve(filename)
 	let mod = require.cache[filename]
 	if (mod) {
 		delete require.cache[filename]
