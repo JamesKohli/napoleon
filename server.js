@@ -24,6 +24,9 @@ const SITE_NAME = process.env.SITE_NAME || "Localhost"
 const SITE_URL = process.env.SITE_URL || "http://" + HTTP_HOST + ":" + HTTP_PORT
 
 const LIMIT_WAITING_GAMES = (process.env.LIMIT_WAITING_GAMES | 0) || 3
+const LIMIT_OPEN_GAMES = (process.env.LIMIT_OPEN_GAMES | 0) || 5
+const LIMIT_ACTIVE_GAMES = (process.env.LIMIT_ACTIVE_GAMES | 0) || 30
+const LIMIT_TM_QUEUE = (process.env.LIMIT_TM_QUEUE | 0) || 5
 
 const REGEX_MAIL = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/
 const REGEX_NAME = /^[\p{Alpha}\p{Number}'_-]+( [\p{Alpha}\p{Number}'_-]+)*$/u
@@ -1597,6 +1600,14 @@ const SQL_DELETE_PLAYER_ROLE = SQL("DELETE FROM players WHERE game_id=? AND role
 
 const SQL_SELECT_PLAYER_VIEW = SQL("select * from player_view where game_id = ?")
 
+const SQL_COUNT_OPEN_GAMES = SQL(`select count(*) from games where owner_id=? and status=0`).pluck()
+const SQL_COUNT_ACTIVE_GAMES = SQL(`
+	select count(*) from games
+	where status < 2 and exists (
+		select 1 from players where players.user_id=? and players.game_id=games.game_id
+	)
+`).pluck()
+
 const SQL_SELECT_REMATCH = SQL(`SELECT game_id FROM games WHERE status < ${STATUS_FINISHED} AND notice=?`).pluck()
 const SQL_INSERT_REMATCH = SQL(`
 	insert or ignore into games
@@ -1732,14 +1743,20 @@ const QUERY_LIST_FINISHED_GAMES_OF_USER = SQL(`
 	`)
 
 function check_create_game_limit(user) {
-	if (user.waiting > LIMIT_WAITING_GAMES)
+	if (user.waiting >= LIMIT_WAITING_GAMES)
 		return "You have too many games waiting!"
+	if (SQL_COUNT_OPEN_GAMES.get(user.user_id) >= LIMIT_OPEN_GAMES)
+		return "You have too many open games!"
+	if (SQL_COUNT_ACTIVE_GAMES.get(user.user_id) >= LIMIT_ACTIVE_GAMES)
+		return "You cannot join any more games!"
 	return null
 }
 
 function check_join_game_limit(user) {
-	if (user.waiting > LIMIT_WAITING_GAMES + 1)
+	if (user.waiting >= LIMIT_WAITING_GAMES + 1)
 		return "You have too many games waiting!"
+	if (SQL_COUNT_ACTIVE_GAMES.get(user.user_id) >= LIMIT_ACTIVE_GAMES)
+		return "You cannot join any more games!"
 	return null
 }
 
@@ -2970,22 +2987,11 @@ const TM_DELETE_QUEUE_INACTIVE = SQL(`
 	)
 `)
 
-const TM_MAY_JOIN_ANY_SEED_LAX = SQL(`
-	select ( select notify and is_verified from users where user_id=@user_id )
-	or ( select exists ( select 1 from webhooks where user_id=@user_id and error is null ) )
-	or ( select exists ( select 1 from ratings where user_id=@user_id ) )
-	as may_join
-`).pluck()
-
-const TM_MAY_JOIN_ANY = SQL(`
-	select is_verified from users where user_id=?
-`).pluck()
-
-const TM_MAY_JOIN_TITLE = SQL(`
+const TM_SELECT_USER_HAS_PLAYED_TITLE = SQL(`
 	select exists ( select 1 from ratings where user_id=? and title_id=? )
 `).pluck()
 
-const TM_MAY_JOIN_SEED = SQL(`
+const TM_SELECT_SEED_IS_OPEN = SQL(`
 	select is_open or exists ( select 1 from tm_queue_view where tm_queue_view.seed_id = tm_seeds.seed_id )
 	from tm_seeds
 	where seed_id=?
@@ -3018,20 +3024,32 @@ const TM_MAY_JOIN_SEED_LEVEL = SQL(`
 		win_cte, play_cte
 `).pluck()
 
-function is_banned_from_tournaments(user_id) {
-	return TM_SELECT_BANNED.get(user_id)
-}
+const TM_COUNT_QUEUE = SQL(`
+	select count(1) from tm_queue where user_id = ?
+`).pluck()
 
-function may_join_any_seed(user_id, title_id) {
-	return DEBUG || TM_MAY_JOIN_ANY.get(user_id)
-}
+function check_join_seed_limit(user, seed) {
+	let limit = check_join_game_limit(user)
+	if (limit)
+		return limit
 
-function may_join_title_seed(user_id, title_id) {
-	return DEBUG || TM_MAY_JOIN_TITLE.get(user_id, title_id)
-}
+	if (TM_SELECT_BANNED.get(user.user_id))
+		return "You may not join any tournaments."
 
-function may_join_seed(seed_id) {
-	return TM_MAY_JOIN_SEED.get(seed_id)
+	if (!DEBUG) {
+		if (!SQL_SELECT_USER_VERIFIED.get(user.user_id))
+			return "Verify your mail address to join this tournament."
+		if (!TM_SELECT_USER_HAS_PLAYED_TITLE.get(user.user_id, seed.title_id))
+			return "You need to play more before you can join this tournament."
+	}
+
+	if (!TM_SELECT_SEED_IS_OPEN.get(seed.seed_id))
+		return "This tournament is closed."
+
+	if (TM_COUNT_QUEUE.get(user.user_id) >= LIMIT_TM_QUEUE)
+		return "You cannot queue for more tournaments now."
+
+	return null
 }
 
 function may_join_seed_level(user_id, seed_id, level) {
@@ -3397,15 +3415,8 @@ app.get("/tm/seed/:seed_name", function (req, res) {
 	let error = null
 	let may_register = false
 	if (req.user) {
-		if (is_banned_from_tournaments(req.user.user_id))
-			error = "You may not join any tournaments."
-		else if (!may_join_any_seed(req.user.user_id))
-			error = "Verify your mail address to join this tournament."
-		else if (!may_join_title_seed(req.user.user_id, seed.title_id))
-			error = "You need to play more before you can join this tournament."
-		else if (!may_join_seed(seed_id))
-			error = "This tournament is closed."
-		else
+		error = check_join_seed_limit(req.user, seed)
+		if (!error)
 			may_register = true
 	}
 
@@ -3433,13 +3444,13 @@ app.get("/tm/pool/:pool_name", function (req, res) {
 app.post("/tm/register/:seed_id/:level", must_be_logged_in, function (req, res) {
 	let seed_id = req.params.seed_id | 0
 	let level = req.params.level | 0
+	let seed = TM_SELECT_SEED.get(seed_id)
+	if (!seed)
+		return res.status(404).send("Tournament seed not found.")
 	let user_id = req.user.user_id
-	if (is_banned_from_tournaments(req.user.user_id))
-		return res.status(401).send("You may not join any tournaments.")
-	if (!may_join_any_seed(user_id))
-		return res.status(401).send("You may not join any tournaments right now.")
-	if (!may_join_seed(seed_id))
-		return res.status(401).send("This tournament is closed.")
+	let limit = check_join_seed_limit(req.user, seed)
+	if (limit)
+		return res.status(401).send(limit)
 	if (!may_join_seed_level(req.user.user_id, seed_id, level))
 		return res.status(401).send("You may not join this tournament.")
 	TM_INSERT_QUEUE.run(user_id, seed_id, level)
