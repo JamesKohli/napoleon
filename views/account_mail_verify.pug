@@ -10,6 +10,8 @@ html
 			h1 Verify mail
 			if flash
 				p.error= flash
+			else
+				p.error Please verify your mail address!
 
 			p Your mail address is <code>#{user.mail}</code>
 

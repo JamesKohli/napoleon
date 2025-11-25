@@ -584,6 +584,14 @@ function must_be_logged_in(req, res, next) {
 	return next()
 }
 
+function must_be_verified(req, res, next) {
+	if (!req.user)
+		return res.redirect("/login?redirect=" + encodeURIComponent(req.originalUrl))
+	if (!SQL_SELECT_USER_VERIFIED.get(req.user.user_id))
+		return res.redirect("/account/mail/verify")
+	return next()
+}
+
 function must_be_administrator(req, res, next) {
 	if (!req.user || req.user.user_id !== 1)
 		return res.status(401).send("Not authorized")
@@ -829,7 +837,7 @@ app.get("/admin/timeouts", must_be_administrator, function (req, res) {
  * USER PROFILE
  */
 
-app.get("/account/mail/subscribe", must_be_logged_in, function (req, res) {
+app.get("/account/mail/subscribe", must_be_verified, function (req, res) {
 	SQL_UPDATE_USER_NOTIFY.run(1, req.user.user_id)
 	res.redirect("/account")
 })
@@ -1103,7 +1111,7 @@ app.get("/message/read/:message_id", must_be_logged_in, function (req, res) {
 	})
 })
 
-app.get("/message/send", must_be_logged_in, function (req, res) {
+app.get("/message/send", must_be_verified, function (req, res) {
 	let friends = SQL_SELECT_CONTACT_FRIEND_NAMES.all(req.user.user_id)
 	res.render("message_send.pug", {
 		user: req.user,
@@ -1114,7 +1122,7 @@ app.get("/message/send", must_be_logged_in, function (req, res) {
 	})
 })
 
-app.get("/message/send/:to_name", must_be_logged_in, function (req, res) {
+app.get("/message/send/:to_name", must_be_verified, function (req, res) {
 	let friends = SQL_SELECT_CONTACT_FRIEND_NAMES.all(req.user.user_id)
 	let to_name = req.params.to_name
 	res.render("message_send.pug", {
@@ -1126,7 +1134,7 @@ app.get("/message/send/:to_name", must_be_logged_in, function (req, res) {
 	})
 })
 
-app.post("/message/send", must_be_logged_in, function (req, res) {
+app.post("/message/send", must_be_verified, function (req, res) {
 	let to_name = req.body.to.trim()
 	let subject = req.body.subject.trim()
 	let body = req.body.body.trim()
@@ -1155,7 +1163,7 @@ function quote_body(message) {
 	return "\n\n" + "On " + when + " " + who + " wrote:\n> " + what + "\n"
 }
 
-app.get("/message/reply/:message_id", must_be_logged_in, function (req, res) {
+app.get("/message/reply/:message_id", must_be_verified, function (req, res) {
 	let message_id = req.params.message_id | 0
 	let message = MESSAGE_FETCH.get(message_id, req.user.user_id, req.user.user_id)
 	if (!message)
@@ -1292,13 +1300,13 @@ app.get("/forum/delete-post/:post_id", must_be_administrator, function (req, res
 	))
 })
 
-app.get("/forum/post", must_be_logged_in, function (req, res) {
+app.get("/forum/post", must_be_verified, function (req, res) {
 	res.render("forum_post.pug", {
 		user: req.user,
 	})
 })
 
-app.post("/forum/post", must_be_logged_in, function (req, res) {
+app.post("/forum/post", must_be_verified, function (req, res) {
 	let user_id = req.user.user_id
 	let subject = req.body.subject.trim()
 	let body = req.body.body
@@ -1309,7 +1317,7 @@ app.post("/forum/post", must_be_logged_in, function (req, res) {
 	res.redirect("/forum/thread/" + thread_id)
 })
 
-app.get("/forum/edit/:post_id", must_be_logged_in, function (req, res) {
+app.get("/forum/edit/:post_id", must_be_verified, function (req, res) {
 	// TODO: edit subject if editing first post
 	let post_id = req.params.post_id | 0
 	let post = FORUM_GET_POST.get(post_id)
@@ -1321,7 +1329,7 @@ app.get("/forum/edit/:post_id", must_be_logged_in, function (req, res) {
 	})
 })
 
-app.post("/forum/edit/:post_id", must_be_logged_in, function (req, res) {
+app.post("/forum/edit/:post_id", must_be_verified, function (req, res) {
 	let user_id = req.user.user_id
 	let post_id = req.params.post_id | 0
 	let body = req.body.body
@@ -1329,7 +1337,7 @@ app.post("/forum/edit/:post_id", must_be_logged_in, function (req, res) {
 	res.redirect("/forum/thread/" + thread_id)
 })
 
-app.get("/forum/reply/:post_id", must_be_logged_in, function (req, res) {
+app.get("/forum/reply/:post_id", must_be_verified, function (req, res) {
 	let post_id = req.params.post_id | 0
 	let post = FORUM_GET_POST.get(post_id)
 	if (!post)
@@ -1344,7 +1352,7 @@ app.get("/forum/reply/:post_id", must_be_logged_in, function (req, res) {
 	})
 })
 
-app.post("/forum/reply/:thread_id", must_be_logged_in, function (req, res) {
+app.post("/forum/reply/:thread_id", must_be_verified, function (req, res) {
 	let thread_id = req.params.thread_id | 0
 	let user_id = req.user.user_id
 	let body = req.body.body
