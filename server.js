@@ -540,7 +540,7 @@ const SQL_UPDATE_USER_ABOUT = SQL("insert or replace into user_about (user_id,ab
 const SQL_UPDATE_USER_PASSWORD = SQL("insert or replace into user_password (user_id,password,salt) values (?,?,?)")
 const SQL_UPDATE_USER_FIRST_SEEN = SQL("insert or replace into user_first_seen (user_id,ctime,ip) values (?,datetime(),?)")
 const SQL_UPDATE_USER_LAST_SEEN = SQL("insert or replace into user_last_seen (user_id,atime,ip) values (?,datetime(),?)")
-const SQL_UPDATE_USER_IS_BANNED = SQL("update users set is_banned=? where name=?")
+const SQL_UPDATE_USER_IS_BANNED = SQL("update users set is_banned=? where user_id=?")
 
 const SQL_SELECT_WEBHOOK = SQL("SELECT * FROM webhooks WHERE user_id=?")
 const SQL_SELECT_WEBHOOK_SEND = SQL("SELECT url, format, prefix FROM webhooks WHERE user_id=? AND error is null")
@@ -565,7 +565,7 @@ app.use(function (req, res, next) {
 			req.user = res.locals.user = SQL_SELECT_USER_DYNAMIC.get(user_id)
 			SQL_UPDATE_USER_LAST_SEEN.run(user_id, ip)
 			if (req.user.is_banned)
-				return res.status(403).send("")
+				return res.send("")
 		}
 	}
 
@@ -807,15 +807,16 @@ app.post("/account/delete", must_be_logged_in, function (req, res) {
 })
 
 app.get("/admin/ban-user/:who", must_be_administrator, function (req, res) {
-	let who = req.params.who
+	let who = SQL_SELECT_USER_ID.get(req.params.who)
 	SQL_UPDATE_USER_IS_BANNED.run(1, who)
-	return res.redirect("/user/" + who)
+	TM_DELETE_QUEUE_USER.run(who)
+	return res.redirect("/user/" + req.params.who)
 })
 
 app.get("/admin/unban-user/:who", must_be_administrator, function (req, res) {
-	let who = req.params.who
+	let who = SQL_SELECT_USER_ID.get(req.params.who)
 	SQL_UPDATE_USER_IS_BANNED.run(0, who)
-	return res.redirect("/user/" + who)
+	return res.redirect("/user/" + req.params.who)
 })
 
 const SQL_SELECT_ADMIN_TIMEOUTS = SQL(`
