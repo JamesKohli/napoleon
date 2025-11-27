@@ -120,10 +120,15 @@ exports.view = function (state, role) {
 
 		V.actions = {}
 
-		if (P[L.P])
-			P[L.P].prompt()
-		else
-			V.prompt = "TODO: " + L.P
+		try {
+			if (P[L.P])
+				P[L.P].prompt()
+			else
+				V.prompt = "TODO: " + L.P
+		} catch (x) {
+			console.error(x)
+			V.prompt = x.toString()
+		}
 
 		if (V.actions.undo === undefined)
 			button("undo", G.undo?.length > 0)
