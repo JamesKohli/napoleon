@@ -402,13 +402,14 @@ function init_role_element(role_id, role_name) {
 
 function init_player_names(players) {
 	roles = {}
-	for (let pp of players) {
+	for (let i = 0; i < players.length; ++i) {
+		let pp = players[i]
 		let class_name = pp.role.replace(/\W/g, "_")
 		let id = "role_" + class_name
 		let e = document.getElementById(id)
 		if (!e)
 			e = init_role_element(id, pp.role)
-		let obj = roles[pp.role] = {
+		let obj = roles[pp.role] = roles[i] = {
 			class_name: class_name,
 			id: id,
 			element: e,
@@ -670,9 +671,11 @@ function update_header() {
 function update_roles() {
 	if (view.active !== undefined) {
 		for (let role in roles) {
-			roles[role].element.classList.toggle("active",
-				view.active === role || view.active === "Both" || view.active.includes(role)
-			)
+			if (typeof view.active === "string") {
+				roles[role].element.classList.toggle("active",
+					view.active === role || view.active === "Both" || view.active.includes(role)
+				)
+			}
 		}
 	}
 }
