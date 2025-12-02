@@ -42,6 +42,7 @@ let nodes = []
 let edges = []
 let labels = []
 let groups = []
+let group_stack = []
 let mode, group, name, x, y, w, h, cx, cy, rx, ry, x2, y2
 
 function flush() {
@@ -177,12 +178,26 @@ function parse_svg(filename) {
 			parse_path_data(line.split('"')[1].split(/[ ,]/))
 
 		else if (line.startsWith('inkscape:label="') && mode === "g") {
-			group = line.split('"')[1]
+			group_stack.push(line.split('"')[1])
+			group = group_stack.join("/")
 			groups.push(group)
 		}
 
 		else if (line.startsWith('inkscape:label="') && mode !== "g") {
 			name = line.split('"')[1]
+		}
+		else if (line.startsWith("</g>")) {
+			flush()
+			mode = null
+			group_stack.pop()
+			group = group_stack.join("/")
+		}
+
+		if (line.endsWith("/>") && mode === "g") {
+			flush()
+			mode = null
+			group_stack.pop()
+			group = group_stack.join("/")
 		}
 
 		if (line.includes("</tspan>")) {
