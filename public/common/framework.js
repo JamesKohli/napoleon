@@ -428,7 +428,7 @@ function _parse(text) {
 				emit(`${i} = ${start}`)
 				ix_loop = prog.length
 				block(body)
-				emit(`if (++(${i}) <= ${end}) L.I = ${ix_loop}`)
+				emit(`if ((${i}) < ${end}) { ++(${i}); L.I = ${ix_loop} }`)
 				return
 			}
 			// for i in (array) { block }
