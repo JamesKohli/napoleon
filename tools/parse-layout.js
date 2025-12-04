@@ -184,7 +184,7 @@ function parse_svg(filename) {
 		}
 
 		else if (line.startsWith('inkscape:label="') && mode !== "g") {
-			name = line.split('"')[1]
+			name = line.split('"')[1].replaceAll("&amp;", "&")
 		}
 		else if (line.startsWith("</g>")) {
 			flush()

@@ -43,14 +43,14 @@ for (var line of lines) {
 	rx = ry = rw = rh = 0
 	if (line.includes(",")) {
 		line = line.split(",")
-		name = line[0]
-		color = line[1]
-		rw = line[2]
-		rh = line[3]
-		rx = line[4]
-		ry = line[5]
+		name = line[0].replaceAll("&", "&amp;")
+		color = line[1] ?? "black"
+		rw = Number(line[2] ?? 0)
+		rh = Number(line[3] ?? 0)
+		rx = Number(line[4] ?? 0)
+		ry = Number(line[5] ?? 0)
 	} else {
-		name = line
+		name = line.replaceAll("&", "&amp;")
 		color = "black"
 	}
 	if (!rw || !rh) {
