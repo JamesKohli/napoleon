@@ -401,7 +401,8 @@ function init_role_element(role_id, role_name) {
 }
 
 function init_player_names(players) {
-	roles = {}
+	roles = []
+	roles.length = players.length
 	for (let i = 0; i < players.length; ++i) {
 		let pp = players[i]
 		let class_name = pp.role.replace(/\W/g, "_")
@@ -410,6 +411,7 @@ function init_player_names(players) {
 		if (!e)
 			e = init_role_element(id, pp.role)
 		let obj = roles[pp.role] = roles[i] = {
+			role: pp.role,
 			class_name: class_name,
 			id: id,
 			element: e,
@@ -504,8 +506,8 @@ function connect_play() {
 		document.querySelector("header").classList.add("disconnected")
 		document.getElementById("prompt").textContent = "Disconnected."
 		document.getElementById("actions").replaceChildren()
-		for (let role in roles)
-			roles[role].element.classList.remove("present")
+		for (let role of roles)
+			role.element.classList.remove("present")
 		if (view) {
 			view.actions = null
 			on_update()
@@ -576,8 +578,8 @@ function connect_play() {
 			break
 
 		case "presence":
-			for (let role in roles)
-				roles[role].element.classList.toggle("present", arg.includes(role))
+			for (let role of roles)
+				role.element.classList.toggle("present", arg.includes(role.role))
 			break
 
 		case "state":
@@ -670,10 +672,10 @@ function update_header() {
 
 function update_roles() {
 	if (view.active !== undefined) {
-		for (let role in roles) {
+		for (let role of roles) {
 			if (typeof view.active === "string") {
-				roles[role].element.classList.toggle("active",
-					view.active === role || view.active === "Both" || view.active.includes(role)
+				role.element.classList.toggle("active",
+					view.active === role.role || view.active === "Both" || view.active.includes(role.role)
 				)
 			}
 		}
@@ -837,7 +839,7 @@ function confirm_resign() {
 }
 
 function add_resign_menu() {
-	if (Object.keys(roles).length === 2) {
+	if (roles.length === 2) {
 		let popup = document.querySelector("#toolbar details menu")
 		popup.insertAdjacentHTML("beforeend", '<li class="resign separator">')
 		popup.insertAdjacentHTML("beforeend", '<li class="resign" onclick="confirm_resign()">Resign')
