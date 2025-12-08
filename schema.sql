@@ -225,6 +225,7 @@ create view rated_games_view as
 		and not exists (
 			select 1 from players where players.game_id = games.game_id and user_id = 0
 		)
+		and result != 'None'
 ;
 
 create table if not exists ratings (

@@ -4447,17 +4447,58 @@ const SQL_GAME_STATS = SQL(`
 		total > 12
 	`)
 
+const SQL_TOP_FINISHED = SQL(`
+	select
+		count(1) as n, title_id
+	from
+		rated_games_view
+	group by
+		title_id
+	order by
+		n desc
+	limit 10
+`)
+
+const SQL_TOP_RECENT = SQL(`
+	select
+		count(1) as n, title_id
+	from
+		rated_games_view
+		games
+	where
+		julianday(mtime) > julianday('now', '-28 days')
+	group by
+		title_id
+	order by
+		n desc
+	limit 10
+`)
+
+const SQL_TOP_ACTIVE = SQL(`
+	select
+		count(1) as n, title_id
+	from
+		games
+	where
+		is_opposed and status=1 and moves>0
+	group by
+		title_id
+	order by
+		n desc
+	limit 10
+`)
+
 app.get("/stats", function (req, res) {
 	let stats = SQL_GAME_STATS.all()
+	let top_finished = SQL_TOP_FINISHED.all()
+	let top_recent = SQL_TOP_RECENT.all()
+	let top_active = SQL_TOP_ACTIVE.all()
 	stats.forEach(row => {
 		row.title_name = TITLE_NAME[row.title_id]
 		row.result_role = row.result_role.split("%")
 		row.result_count = row.result_count.split("%").map(Number)
 	})
-	res.render("stats_index.pug", {
-		user: req.user,
-		stats: stats,
-	})
+	res.render("stats_index.pug", { user: req.user, stats, top_finished, top_recent, top_active })
 })
 
 const SQL_USER_STATS = SQL(`
@@ -4476,6 +4517,7 @@ const SQL_USER_STATS = SQL(`
 		and user_id = ?
 		and is_opposed
 		and ( status = ${STATUS_FINISHED} or status = ${STATUS_ARCHIVED} )
+		and result != 'None'
 	group by
 		titles.title_name,
 		scenario,
@@ -4496,6 +4538,7 @@ const SQL_USER_STATS = SQL(`
 		and user_id = ?
 		and is_opposed
 		and ( status = ${STATUS_FINISHED} or status = ${STATUS_ARCHIVED} )
+		and result != 'None'
 	group by
 		titles.title_name,
 		scenario
