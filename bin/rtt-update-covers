@@ -18,7 +18,7 @@ do
 	then
 
 	PORTRAIT=$(convert $F -format '%[fx:w<h]' info:)
-	SQUARE=$(convert $F -format '%[fx:w=h]' info:)
+	SQUARE=$(convert $F -format '%[fx:w==h]' info:)
 
 	SIZE_1X=170x200
 	SIZE_2X=340x400
@@ -36,7 +36,7 @@ do
 	then
 		echo - square
 		SIZE_1X=170x170!
-		SIZE_2X=170x170!
+		SIZE_2X=340x340!
 		SIZE_TH=120x120!
 	fi
 
