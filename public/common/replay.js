@@ -118,7 +118,7 @@ function eval_action(s, item, p) {
 
 		let result = "None"
 		if (roles.length >= 2)
-			result = roles.filter(r !== result).join(", ")
+			result = roles.filter(r => r.name !== result).join(", ")
 
 		s = finish_game_state(s, result, item_role + " resigned.")
 
@@ -160,8 +160,8 @@ function update_replay_view() {
 	}
 
 	document.body.classList.toggle("Observer", player === "Observer")
-	for (let r in roles)
-		document.body.classList.toggle(roles[r].class_name, player === r)
+	for (let r of roles)
+		document.body.classList.toggle(r.class_name, r.role === player)
 
 	view = rules.view(replay_state, player, true)
 	if (params.mode !== "debug")
@@ -350,8 +350,8 @@ async function load_replay() {
 	let viewpoint_panel = document.createElement("div")
 	viewpoint_panel.id = "viewpoint_panel"
 	create_viewpoint_button(viewpoint_panel, "Active", "Active")
-	for (let r in roles)
-		create_viewpoint_button(viewpoint_panel, r, r)
+	for (let r of roles)
+		create_viewpoint_button(viewpoint_panel, r.role, r.role)
 	create_viewpoint_button(viewpoint_panel, "Observer", "Observer")
 	document.getElementById("actions").appendChild(viewpoint_panel)
 
