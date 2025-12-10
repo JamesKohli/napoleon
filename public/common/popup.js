@@ -1,5 +1,5 @@
 /*
-	<menu id="popup">
+	<menu id="popup" hidden>
 		<li class="title">TITLE
 		<li class="separator">
 		<li data-action="foo"> Foo!
@@ -39,7 +39,7 @@ function show_popup_menu(evt, menu_id, card, title) {
 
 	if (show) {
 		menu.onmouseleave = hide_popup_menu
-		menu.style.display = "block"
+		menu.hidden = false
 		if (title) {
 			let item = menu.querySelector("li.title")
 			if (item) {
@@ -57,12 +57,12 @@ function show_popup_menu(evt, menu_id, card, title) {
 
 		evt.stopPropagation()
 	} else {
-		menu.style.display = "none"
+		menu.hidden = true
 	}
 }
 
 function hide_popup_menu() {
-	document.getElementById("popup").style.display = "none"
+	document.getElementById("popup").hidden = true
 }
 
 function on_click_card(evt) {

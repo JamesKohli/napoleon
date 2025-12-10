@@ -258,8 +258,8 @@ function on_replay_jump_ninth(target) {
 let replay_timer = 0
 function on_replay_play_pause() {
 	if (replay_timer === 0) {
-		document.getElementById("replay_stop").classList.remove("hide")
-		document.getElementById("replay_play").classList.add("hide")
+		document.getElementById("replay_stop").hidden = false
+		document.getElementById("replay_play").hidden = true
 		replay_timer = setInterval(() => {
 			if (replay_this < replay.length)
 				on_replay_step_next()
@@ -267,8 +267,8 @@ function on_replay_play_pause() {
 				on_replay_play_pause()
 		}, 500)
 	} else {
-		document.getElementById("replay_stop").classList.add("hide")
-		document.getElementById("replay_play").classList.remove("hide")
+		document.getElementById("replay_stop").hidden = true
+		document.getElementById("replay_play").hidden = false
 		clearInterval(replay_timer)
 		replay_timer = 0
 	}
@@ -356,9 +356,9 @@ async function load_replay() {
 	document.getElementById("actions").appendChild(viewpoint_panel)
 
 	// Adjust replay panel
-	document.getElementById("replay_step_prev").classList.remove("hide")
-	document.getElementById("replay_step_next").classList.remove("hide")
-	document.getElementById("replay_last").classList.remove("hide")
+	document.getElementById("replay_step_prev").hidden = false
+	document.getElementById("replay_step_next").hidden = false
+	document.getElementById("replay_last").hidden = false
 
 	document.getElementById("replay_first").onclick = on_replay_first
 	document.getElementById("replay_prev").onclick = on_replay_jump_prev

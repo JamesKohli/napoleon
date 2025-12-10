@@ -39,7 +39,7 @@ var replay_panel = null
 
 function scroll_into_view(e) {
 	if (window.innerWidth <= 800)
-		document.querySelector("aside").classList.add("hide")
+		document.querySelector("aside").hidden = true
 	setTimeout(function () {
 		e.scrollIntoView({ block: "center", inline: "center", behavior: "smooth" })
 	}, 0)
@@ -144,6 +144,7 @@ function init_chat() {
 
 	let chat_window = document.createElement("div")
 	chat_window.id = "chat_window"
+	chat_window.hidden = true
 	chat_window.innerHTML = `
 		<div id="chat_header">Chat</div>
 		<div id="chat_x" onclick="toggle_chat()">\u274c</div>
@@ -153,7 +154,7 @@ function init_chat() {
 	document.body.appendChild(chat_window)
 
 	let chat_button = document.getElementById("chat_button")
-	chat_button.classList.remove("hide")
+	chat_button.hidden = false
 
 	chat = {
 		is_visible: false,
@@ -255,7 +256,7 @@ function update_chat_old() {
 function show_chat() {
 	if (!chat.is_visible) {
 		document.getElementById("chat_button").classList.remove("new")
-		document.getElementById("chat_window").classList.add("show")
+		document.getElementById("chat_window").hidden = false
 		document.getElementById("chat_input").focus()
 		chat.is_visible = true
 		fetch_chat()
@@ -268,7 +269,7 @@ function show_chat() {
 
 function hide_chat() {
 	if (chat.is_visible) {
-		document.getElementById("chat_window").classList.remove("show")
+		document.getElementById("chat_window").hidden = true
 		document.getElementById("chat_input").blur()
 		chat.is_visible = false
 	}
@@ -300,6 +301,7 @@ function init_notepad() {
 
 	let notepad_window = document.createElement("div")
 	notepad_window.id = "notepad_window"
+	notepad_window.hidden = true
 	notepad_window.innerHTML = `
 		<div id="notepad_header">Notepad: ${player}</div>
 		<div id="notepad_x" onclick="toggle_notepad()">\u274c</div>
@@ -341,7 +343,7 @@ function save_notepad() {
 
 function show_notepad() {
 	if (!notepad.is_visible) {
-		document.getElementById("notepad_window").classList.add("show")
+		document.getElementById("notepad_window").hidden = false
 		document.getElementById("notepad_input").focus()
 		notepad.is_visible = true
 	}
@@ -350,7 +352,7 @@ function show_notepad() {
 function hide_notepad() {
 	if (notepad.is_visible) {
 		save_notepad() // auto-save when closing notepad
-		document.getElementById("notepad_window").classList.remove("show")
+		document.getElementById("notepad_window").hidden = true
 		document.getElementById("notepad_input").blur()
 		notepad.is_visible = false
 	}
@@ -748,9 +750,9 @@ function action_button_with_argument(verb, noun, label) {
 		document.getElementById("actions").prepend(button)
 	}
 	if (view.actions && view.actions[verb] && view.actions[verb].includes(noun)) {
-		button.classList.remove("hide")
+		button.hidden = false
 	} else {
-		button.classList.add("hide")
+		button.hidden = true
 	}
 }
 
@@ -767,7 +769,7 @@ function action_button_imp(action, label, callback) {
 		document.getElementById("actions").prepend(button)
 	}
 	if (view.actions && action in view.actions) {
-		button.classList.remove("hide")
+		button.hidden = false
 		if (view.actions[action]) {
 			if (label === undefined)
 				button.textContent = view.actions[action]
@@ -776,7 +778,7 @@ function action_button_imp(action, label, callback) {
 			button.disabled = true
 		}
 	} else {
-		button.classList.add("hide")
+		button.hidden = true
 	}
 }
 
@@ -872,7 +874,7 @@ document.querySelector("main").insertAdjacentHTML("beforeend", "<div style='heig
 document.querySelector("header").insertAdjacentHTML("beforeend", "<div id='actions'>")
 document.querySelector("header").insertAdjacentHTML("beforeend", "<div id='prompt'>")
 
-add_icon_button(0, "chat_button", "chat-bubble", toggle_chat).classList.add("hide")
+add_icon_button(0, "chat_button", "chat-bubble", toggle_chat).hidden = true
 add_icon_button(0, "zoom_button", "magnifying-glass", () => toggle_zoom())
 add_icon_button(0, "log_button", "scroll-quill", toggle_log)
 
@@ -978,12 +980,12 @@ function add_replay_button(id, callback) {
 
 add_replay_button("replay_first", on_snap_first)
 add_replay_button("replay_prev", on_snap_prev)
-add_replay_button("replay_step_prev", null).classList.add("hide")
-add_replay_button("replay_step_next", null).classList.add("hide")
+add_replay_button("replay_step_prev", null).hidden = true
+add_replay_button("replay_step_next", null).hidden = true
 add_replay_button("replay_next", on_snap_next)
-add_replay_button("replay_last", null).classList.add("hide")
+add_replay_button("replay_last", null).hidden = true
 add_replay_button("replay_play", on_snap_penultimate_or_stop)
-add_replay_button("replay_stop", null).classList.add("hide")
+add_replay_button("replay_stop", null).hidden = true
 
 function request_snap(snap_id, skip) {
 	snap_skip_missing = skip
@@ -1126,7 +1128,7 @@ window.addEventListener("blur", function (evt) {
 /* TOGGLE ZOOM MAP TO FIT */
 
 function toggle_log() {
-	document.querySelector("aside").classList.toggle("hide")
+	document.querySelector("aside").hidden = !document.querySelector("aside").hidden
 	update_zoom()
 }
 
@@ -1596,7 +1598,7 @@ var update_zoom = function () {}
 /* INITIALIZE */
 
 if (window.innerWidth <= 800)
-	document.querySelector("aside").classList.add("hide")
+	document.querySelector("aside").hidden = true
 
 window.addEventListener("load", function () {
 	if (params.mode === "debug")
