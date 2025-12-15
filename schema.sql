@@ -754,6 +754,46 @@ create view tm_queue_view as
 		julianday() - julianday(atime) < 3
 	;
 
+drop view if exists tm_seed_stat_view;
+create view tm_seed_stat_view as
+	select
+		tm_seeds.*
+		, iif(level_count >= 3, sum(level=3), null) as n3
+		, iif(level_count >= 2, sum(level=2), null) as n2
+		, iif(level_count >= 1, sum(level=1), null) as n1
+		-- , iif(level_count >= 3, sum(level=3 and not is_finished), null) as a3
+		-- , iif(level_count >= 2, sum(level=2 and not is_finished), null) as a2
+		-- , iif(level_count >= 1, sum(level=1 and not is_finished), null) as a1
+	from tm_seeds
+	left join tm_pools using(seed_id)
+	group by seed_id
+	;
+
+drop view if exists tm_seed_queue_view;
+create view tm_seed_queue_view as
+	select
+		tm_seeds.*
+		, iif(level_count >= 3, sum(level=3), null) as q3
+		, iif(level_count >= 2, sum(level=2), null) as q2
+		, iif(level_count >= 1, sum(level=1), null) as q1
+	from tm_seeds
+	left join tm_queue_view using(seed_id)
+	group by seed_id
+	;
+
+drop view if exists tm_seed_ticket_view;
+create view tm_seed_ticket_view as
+	select
+		seed_id,
+		user_id,
+		iif(level_count >= 3, sum(level=3), null) as t3,
+		iif(level_count >= 2, sum(level=2), null) as t2,
+		iif(level_count >= 1, sum(level=1), null) as t1
+	from tm_seeds
+	join tm_queue_view using(seed_id)
+	group by seed_id, user_id
+	;
+
 drop view if exists tm_pool_active_view;
 create view tm_pool_active_view as
 	select
@@ -771,7 +811,7 @@ create view tm_pool_active_view as
 	group by
 		pool_id
 	order by
-		seed_name, level, pool_id
+		seed_name, start_date desc
 ;
 
 drop view if exists tm_pool_finished_view;
@@ -791,14 +831,7 @@ create view tm_pool_finished_view as
 	group by
 		pool_id
 	order by
-		seed_name, level, pool_id
-;
-
-drop view if exists tm_pool_view;
-create view tm_pool_view as
-	select * from tm_pool_active_view
-	union all
-	select * from tm_pool_finished_view
+		seed_name, finish_date desc
 ;
 
 drop trigger if exists tm_trigger_update_results;

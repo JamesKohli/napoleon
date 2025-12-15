@@ -922,6 +922,7 @@ app.get("/user/:who_name", function (req, res) {
 		let games = QUERY_LIST_PUBLIC_GAMES_OF_USER.all({ user_id: who.user_id })
 		let ratings = SQL_USER_RATINGS.all(who.user_id)
 		annotate_games(games, 0, null, null)
+		let seeds = TM_SEED_LIST_USER.all(who.user_id)
 		let active_pools = TM_POOL_LIST_USER_ACTIVE.all(who.user_id)
 		let finished_pools = TM_POOL_LIST_USER_RECENT_FINISHED.all(who.user_id)
 		let contact = 0
@@ -934,6 +935,7 @@ app.get("/user/:who_name", function (req, res) {
 			timeouts,
 			contact,
 			games,
+			seeds,
 			active_pools,
 			finished_pools,
 			ratings,
@@ -1985,9 +1987,7 @@ function get_title_page(req, res, title_id) {
 	annotate_games(active_games, user_id, unread, null)
 	annotate_games(finished_games, user_id, unread, unseen)
 
-	let seeds = TM_SEED_LIST_TITLE.all(user_id, title_id)
-	let active_pools = TM_POOL_LIST_TITLE_ACTIVE.all(title_id)
-	let finished_pools = TM_POOL_LIST_TITLE_FINISHED.all(title_id)
+	let seeds = user_id ? TM_SEED_LIST_TITLE_WITH_TICKETS.all(user_id, title_id) : TM_SEED_LIST_TITLE.all(title_id)
 
 	res.render("title.pug", {
 		user: req.user,
@@ -1997,8 +1997,6 @@ function get_title_page(req, res, title_id) {
 		active_games,
 		finished_games,
 		seeds,
-		active_pools,
-		finished_pools,
 	})
 }
 
@@ -3069,40 +3067,68 @@ function may_join_seed_level(user_id, seed_id, level) {
 	return false
 }
 
-const TM_SEED_LIST_ALL = SQL(`
+const TM_SEED_STATS = SQL(`
+	with uu as (
+		select seed_id, count(distinct user_id) as players
+		from tm_seeds
+		join tm_pools using(seed_id)
+		join tm_rounds using(pool_id)
+		join players using(game_id)
+		group by seed_id
+	)
 	select
-		tm_seeds.*,
-		sum(level is 1) as queue_size,
-		sum(user_id is ?) as is_queued
-	from tm_seeds left join tm_queue_view using(seed_id)
-	where
-		is_open or exists ( select 1 from tm_queue_view where tm_queue_view.seed_id = tm_seeds.seed_id )
-	group by seed_id
+		seed_name
+		, players
+		, sum(not is_finished) as active
+		, sum(is_finished) as finished
+		, round(min(julianday(finish_date) - julianday(start_date))) as min_duration
+		, round(avg(julianday(finish_date) - julianday(start_date))) as avg_duration
+		, round(max(julianday(finish_date) - julianday(start_date))) as max_duration
+	from tm_seeds
+	join tm_pools using(seed_id)
+	join uu using(seed_id)
+	group by seed_name
+`)
+
+const TM_SEED_LIST_ALL = SQL(`
+	select *
+	from tm_seed_queue_view as qq
+	where is_open
 	order by seed_name
 `)
 
 const TM_SEED_LIST_TITLE = SQL(`
-	select
-		tm_seeds.*,
-		sum(level is 1) as queue_size,
-		sum(user_id is ?) as is_queued
-	from tm_seeds left join tm_queue_view using(seed_id)
-	where title_id = ? and (
-		is_open or exists ( select 1 from tm_queue_view where tm_queue_view.seed_id = tm_seeds.seed_id )
-	)
-	group by seed_id
+	select *
+	from tm_seed_stat_view as ss
+	left join tm_seed_queue_view as qq using(seed_id)
+	where ss.title_id=?
+	order by is_open desc, seed_name
+`)
+
+const TM_SEED_LIST_ALL_WITH_TICKETS = SQL(`
+	select *
+	from tm_seed_queue_view as qq
+	left join ( select * from tm_seed_ticket_view where user_id=? ) using(seed_id)
+	where is_open
 	order by seed_name
 `)
 
+const TM_SEED_LIST_TITLE_WITH_TICKETS = SQL(`
+	select *
+	from tm_seed_stat_view as ss
+	left join tm_seed_queue_view as qq using(seed_id)
+	left join ( select * from tm_seed_ticket_view where user_id=? ) using(seed_id)
+	where ss.title_id=?
+	order by is_open desc, seed_name
+`)
+
 const TM_SEED_LIST_USER = SQL(`
-	select
-		tm_seeds.*,
-		sum(level is 1) as queue_size,
-		sum(user_id is ?) as is_queued
-	from tm_seeds left join tm_queue_view using(seed_id)
-	group by seed_id
-	having is_queued
-	order by seed_name
+	select *
+	from tm_seed_ticket_view as tt
+	join tm_seed_queue_view as qq using(seed_id)
+	join tm_seed_stat_view as ss using(seed_id)
+	where tt.user_id = ?
+	order by is_open desc, seed_name
 `)
 
 const TM_POOL_LIST_USER_ACTIVE = SQL(`
@@ -3404,8 +3430,13 @@ const TM_SELECT_SEED_READY_MINI_CUP = SQL(`
 `)
 
 app.get("/tm/list", function (req, res) {
-	let seeds = TM_SEED_LIST_ALL.all(req.user ? req.user.user_id : 0)
+	let seeds = req.user ? TM_SEED_LIST_ALL_WITH_TICKETS.all(req.user.user_id) : TM_SEED_LIST_ALL.all()
 	res.render("tm_list.pug", { seeds })
+})
+
+app.get("/tm/stats", function (req, res) {
+	let seeds = TM_SEED_STATS.all()
+	res.render("tm_stats.pug", { seeds })
 })
 
 app.get("/tm/seed/:seed_name", function (req, res) {

@@ -168,56 +168,118 @@ mixin gamelist(list,hide_title=0)
 							a(href=`/${item.title_id}`)
 								img(src=`/${item.title_id}/thumbnail.jpg`)
 
-mixin seedlist(list, title)
+mixin seedlist_stat(list, title)
 	if list && list.length > 0
-		table.half.seeds
+		table.seeds.stats.wide.striped
 			if title
 				thead
 					tr
 						th= title
-						td
+						td L3
+						td L2
+						td L1
+						td Q3
+						td Q2
+						td Q1
 						td= TM_ICON_QUEUE
 			tbody
 				each seed in list
 					tr
 						td
 							a(href="/tm/seed/" + seed.seed_name)= seed.seed_name
-						td.n #{seed.queue_size}
-						if user && seed.is_queued
-							td= TM_ICON_TICKET
+
+						td #{seed.n3}
+						td #{seed.n2}
+						td #{seed.n1}
+
+						if seed.is_open || seed.q1 || seed.q2 || seed.q3
+							if seed.t3
+								td #{seed.q3} #{TM_ICON_TICKET}
+							else if seed.level_count >= 3
+								td #{seed.q3|0}
+							else
+								td
+							if seed.t2
+								td #{seed.q2} #{TM_ICON_TICKET}
+							else if seed.level_count >= 2
+								td #{seed.q2|0}
+							else
+								td
+							if seed.t1
+								td #{seed.q1} #{TM_ICON_TICKET}
+							else
+								td #{seed.q1|0}
+							td= seed.pool_size
 						else
+							td.n(colspan=3)
+								i closed
+							td
+
+mixin seedlist(list, title)
+	if list && list.length > 0
+		table.seeds.wide.striped
+			if title
+				thead
+					tr
+						th= title
+						td Q3
+						td Q2
+						td Q1
+						td= TM_ICON_QUEUE
+			tbody
+				each seed in list
+					tr
+						td
+							a(href="/tm/seed/" + seed.seed_name)= seed.seed_name
+						if seed.is_open || seed.q1 || seed.q2 || seed.q3
+							if seed.t3
+								td #{seed.q3} #{TM_ICON_TICKET}
+							else
+								td #{seed.q3}
+							if seed.t2
+								td #{seed.q2} #{TM_ICON_TICKET}
+							else
+								td #{seed.q2}
+							if seed.t1
+								td #{seed.q1} #{TM_ICON_TICKET}
+							else
+								td #{seed.q1}
+							td= seed.pool_size
+						else
+							td.n(colspan=3)
+								i closed
 							td
 
 mixin poollist(list, title, icon)
 	if list && list.length > 0
-		table.half.pools
+		table.wide.pools.striped
 			if title
 				thead
 					tr
 						th!= title
-						td= icon
+						td
+						td.n= icon
 			tbody
 				each pool in list
 					tr
 						td
-							a(href="/tm/pool/" + pool.pool_name)= pool.pool_name
+							a(href="/tm/pool/" + pool.pool_name)= pool.pool_name.replaceAll(".", ".\u200b")
 						if pool.is_finished
 							if pool.status
 								td!= pool.status.split(",").map(p => `<a class="black" href="/user/${p}">${p}</a>`).join(", ")
 							else
 								td Nobody
+							td.n= human_date(pool.finish_date)
 						else
-							td.w= pool.status
+							td.n= pool.status
+							td.n= human_date(pool.start_date)
 
 mixin tourlist(seeds, pools, fin)
 		if (seeds && seeds.length > 0) || (pools && pools.length > 0) || (fin && fin.length > 0)
 			h2 Tournaments
-			div.tour_list
-				div
-					+seedlist(seeds, "Registrations")
-					+poollist(pools, "Active", TM_ICON_ACTIVE)
-				div
-					+poollist(fin, "Finished", TM_ICON_FINISHED)
+			+seedlist(seeds, "Registrations")
+			+poollist(pools, "Active", TM_ICON_ACTIVE)
+			+poollist(fin, "Finished", TM_ICON_FINISHED)
 
 mixin userstats(who, move_time, timeouts, ratings)
 		if (move_time.mean !== null)
@@ -242,8 +304,8 @@ mixin userstats(who, move_time, timeouts, ratings)
 				thead
 					tr
 						th Title
-						th Count
-						th Last played
+						th Total
+						th Last
 						if user && user.user_id === 1
 							th Elo
 				tbody

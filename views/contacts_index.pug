@@ -8,6 +8,10 @@ html
 			td a.red { text-decoration: none; color: var(--color-red); margin-left: 8px; }
 			td a.blue { text-decoration: none; color: var(--color-black); margin-left: 8px; }
 			td a.blue:hover { color: var(--color-blue); }
+			@media (max-width: 500px) {
+				th:last-child { display: none }
+				td:last-child { display: none }
+			}
 	body
 		include header
 		article
@@ -26,9 +30,9 @@ html
 						tr
 							td
 								a.black(href="/user/"+who.name)= who.name
-							td.w= human_date(who.atime)
+							td= human_date(who.atime)
 							td: i= who.note
-							td.w.r
+							td.r
 								a.blue(href="/contacts/note/"+who.name) &#x270f;
 								a.red(href="/contacts/remove/"+who.name) &#x274c;
 					else

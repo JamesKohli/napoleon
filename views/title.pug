@@ -30,7 +30,9 @@ html
 				h2 Open (missing players)
 				+gamelist(replacement_games, true)
 
-			+tourlist(seeds, active_pools, finished_pools)
+			if (seeds && seeds.length > 0)
+				h2 Tournaments
+				+seedlist_stat(seeds, "Mini Cup")
 
 			if active_games.length > 0
 				h2 Recently active

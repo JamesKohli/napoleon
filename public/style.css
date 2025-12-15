@@ -193,7 +193,7 @@ nav a {
 article {
 	margin: 0 auto;
 	padding: 0 16px;
-	max-width: 830px;
+	max-width: 824px;
 }
 
 @media (min-width: 1340px) {
@@ -250,6 +250,7 @@ table {
 
 table.wide {
 	width: 100%;
+	max-width: 824px;
 }
 
 table.half {
@@ -257,15 +258,19 @@ table.half {
 	max-width: 400px;
 }
 
-table.seeds td:nth-child(2) { text-align: right; }
-table.pools td:nth-child(2) { text-align: right; }
-table.seeds td:nth-child(3) { width: 24px; text-align: right; }
-table.pools td:nth-child(3) { width: 24px; text-align: right; }
+@media (max-width: 800px) {
+	table {
+		font-family: var(--font-widget);
+		font-size: 14px;
+		line-height: 18px;
+	}
+}
 
-table.pools a { color: var(--color-black); text-decoration: none; }
-table.pools a:hover { color: var(--color-blue); text-decoration: underline; }
-table.seeds a { color: var(--color-black); text-decoration: none; }
-table.seeds a:hover { color: var(--color-blue); text-decoration: underline; }
+@media (max-width: 500px) {
+	table {
+		width: 100%;
+	}
+}
 
 thead, th {
 	background-color: var(--color-table-head);
@@ -292,6 +297,28 @@ table.striped tr:nth-child(2n) {
 td.r, th.r { text-align: right; }
 td.w, th.w { white-space: nowrap; }
 td.n, th.n { width: 0px; white-space: nowrap; text-align: right; }
+
+/* TOURNAMENT TABLES */
+
+table.seeds { table-layout: fixed }
+table.seeds td:nth-child(n+2) { width: 42px; text-align: center; }
+table.seeds td:last-child { width: 16px; }
+table.seeds tbody td:nth-child(5) { border-left: 1px solid #0004; }
+table.seeds tbody td:first-child { border-right: 1px solid #0004; }
+table.seeds tbody td:last-child { border-left: 1px solid #0004; }
+
+table.seeds a { color: var(--color-black); text-decoration: none; }
+table.seeds a:hover { color: var(--color-blue); text-decoration: underline; }
+table.pools a { color: var(--color-black); text-decoration: none; }
+table.pools a:hover { color: var(--color-blue); text-decoration: underline; }
+
+@media (max-width: 650px) { table.seeds.stats td:nth-child(2) { display: none } }
+@media (max-width: 600px) { table.seeds.stats td:nth-child(3) { display: none } }
+@media (max-width: 550px) { table.seeds.stats td:nth-child(4) { display: none } }
+@media (max-width: 500px) {
+	table.seeds td:nth-child(n+2) { width: 36px; }
+	table.seeds td:last-child { width: 12px; }
+}
 
 /* FORUM AND MESSAGE POSTS */
 
@@ -332,16 +359,6 @@ div.body img {
 	gap: 24px;
 	margin: 16px 0;
 }
-
-.tour_list {
-	display: grid;
-	grid-template-columns: repeat(auto-fit, minmax(0, 400px));
-	gap: 24px;
-	margin: 16px 0;
-}
-
-.tour_list table { margin: 0; }
-.tour_list table + table { margin-top: 24px; }
 
 .game_item {
 	border: var(--thin-border);
