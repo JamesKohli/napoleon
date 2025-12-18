@@ -218,7 +218,7 @@ app.locals.EMOJI_MATCH = "\u{1f3c6}"
 
 app.locals.TM_ICON_QUEUE = "\u{1f465}"
 app.locals.TM_ICON_TICKET = "\u{1f3ab}"
-app.locals.TM_ICON_ACTIVE = "\u{1f3c1}"
+app.locals.TM_ICON_ACTIVE = "\u{1f3c3}"
 app.locals.TM_ICON_FINISHED = "\u{1f3c6}"
 
 app.locals.PACE_ICON = [

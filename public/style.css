@@ -302,7 +302,7 @@ td.n, th.n { width: 0px; white-space: nowrap; text-align: right; }
 
 table.seeds { table-layout: fixed }
 table.seeds td:nth-child(n+2) { width: 42px; text-align: center; }
-table.seeds td:last-child { width: 16px; }
+table.seeds td:last-child { width: 20px; }
 table.seeds tbody td:nth-child(5) { border-left: 1px solid #0004; }
 table.seeds tbody td:first-child { border-right: 1px solid #0004; }
 table.seeds tbody td:last-child { border-left: 1px solid #0004; }
@@ -317,7 +317,7 @@ table.pools a:hover { color: var(--color-blue); text-decoration: underline; }
 @media (max-width: 550px) { table.seeds.stats td:nth-child(4) { display: none } }
 @media (max-width: 500px) {
 	table.seeds td:nth-child(n+2) { width: 36px; }
-	table.seeds td:last-child { width: 12px; }
+	table.seeds td:last-child { width: 18px; }
 }
 
 /* FORUM AND MESSAGE POSTS */
