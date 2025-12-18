@@ -93,23 +93,57 @@ function scroll_with_middle_mouse(panel_sel, multiplier) {
 function drag_element_with_mouse(element_sel, grabber_sel) {
 	let element = document.querySelector(element_sel)
 	let grabber = document.querySelector(grabber_sel) || element
-	let save_x, save_y
+	let grab_x, grab_y, start_x, start_y, w, h, win_w, win_h
 	function md(e) {
 		if (e.button === 0) {
-			save_x = e.clientX
-			save_y = e.clientY
+			start_x = element.offsetLeft
+			start_y = element.offsetTop
+			grab_x = e.clientX
+			grab_y = e.clientY
 			window.addEventListener("mousemove", mm)
 			window.addEventListener("mouseup", mu)
 			e.preventDefault()
 		}
 	}
 	function mm(e) {
-		let dx = save_x - e.clientX
-		let dy = save_y - e.clientY
-		save_x = e.clientX
-		save_y = e.clientY
-		element.style.left = (element.offsetLeft - dx) + "px"
-		element.style.top = (element.offsetTop - dy) + "px"
+		let w = element.offsetWidth
+		let h = element.offsetHeight
+		let win_w = document.body.clientWidth
+		let win_h = document.body.clientHeight
+		element.style.left = Math.max(0, Math.min(win_w - w, start_x + e.clientX - grab_x)) + "px"
+		element.style.top = Math.max(44, Math.min(win_h - h, start_y + e.clientY - grab_y)) + "px"
+		e.preventDefault()
+	}
+	function mu(e) {
+		if (e.button === 0) {
+			window.removeEventListener("mousemove", mm)
+			window.removeEventListener("mouseup", mu)
+			e.preventDefault()
+		}
+	}
+	grabber.addEventListener("mousedown", md)
+}
+
+function resize_element_with_mouse(element_sel, grabber_sel) {
+	let element = document.querySelector(element_sel)
+	let grabber = document.querySelector(grabber_sel) || element
+	let grab_x, grab_y, start_w, start_h, w, h, win_w, win_h
+	function md(e) {
+		if (e.button === 0) {
+			start_w = element.clientWidth
+			start_h = element.clientHeight
+			grab_x = e.clientX
+			grab_y = e.clientY
+			window.addEventListener("mousemove", mm)
+			window.addEventListener("mouseup", mu)
+			e.preventDefault()
+		}
+	}
+	function mm(e) {
+		let max_w = document.body.clientWidth - element.offsetLeft - 2
+		let max_h = document.body.clientHeight - element.offsetTop - 2
+		element.style.width = Math.max(200, Math.min(max_w, start_w + e.clientX - grab_x)) + "px"
+		element.style.height = Math.max(100, Math.min(max_h, start_h + e.clientY - grab_y)) + "px"
 		e.preventDefault()
 	}
 	function mu(e) {
@@ -150,6 +184,7 @@ function init_chat() {
 		<div id="chat_x" onclick="toggle_chat()">\u274c</div>
 		<div id="chat_text"></div>
 		<form id="chat_form" action=""><input id="chat_input" autocomplete="off"></form>
+		<div id="chat_size"></div>
 		`
 	document.body.appendChild(chat_window)
 
@@ -164,6 +199,13 @@ function init_chat() {
 	}
 
 	drag_element_with_mouse("#chat_window", "#chat_header")
+	resize_element_with_mouse("#chat_window", "#chat_size")
+	window.addEventListener("resize", function () {
+		if (window.innerWidth < 800) {
+			chat_window.style.width = null
+			chat_window.style.height = null
+		}
+	})
 
 	document.getElementById("chat_form").addEventListener("submit", e => {
 		let input = document.getElementById("chat_input")
@@ -195,6 +237,25 @@ function init_chat() {
 }
 
 function update_chat(chat_id, raw_date, user, message) {
+	let role = find_user_role(user)
+	function find_user_role(user) {
+		var match = null
+		if (user) {
+			for (var role of roles) {
+				if (role.user_name === user) {
+					if (match !== null)
+						return null
+					match = role
+				}
+			}
+		}
+		if (match)
+			return match.class_name + " player_" + (roles.indexOf(match) + 1)
+		return null
+	}
+	function escape_html(text) {
+		return text.replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
+	}
 	function format_time(date) {
 		let mm = date.getMinutes()
 		let hh = date.getHours()
@@ -210,10 +271,17 @@ function update_chat(chat_id, raw_date, user, message) {
 	}
 	function add_chat_line(time, user, message) {
 		let line = document.createElement("div")
-		if (user)
-			line.textContent = "[" + time + "] " + user + " \xbb " + message
-		else
-			line.textContent = "[" + time + "] " + message
+		let html = `<span class="time">${time}</span> `
+		if (user) {
+			if (role)
+				html += `<span class="user ${role}">${escape_html(user)}</span> `
+			else
+				html += `<span class="user">${escape_html(user)}</span> `
+		} else {
+			line.className = "system"
+		}
+		html += `<span class="message">${escape_html(message)}</message>`
+		line.innerHTML = html
 		chat.text_element.appendChild(line)
 		chat.text_element.scrollTop = chat.text_element.scrollHeight
 	}
@@ -413,7 +481,9 @@ function init_player_names(players) {
 		if (!e)
 			e = init_role_element(id, pp.role)
 		let obj = roles[pp.role] = roles[i] = {
+			index: i,
 			role: pp.role,
+			user_name: pp.name,
 			class_name: class_name,
 			id: id,
 			element: e,
