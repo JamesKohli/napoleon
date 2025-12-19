@@ -3253,6 +3253,8 @@ const TM_SELECT_PLAYERS_IN_POOL = SQL(`
 		tm_rounds
 		join players using(game_id)
 		join user_view using(user_id)
+	where
+		pool_id = ?
 	group by
 		user_id
 `)
