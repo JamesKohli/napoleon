@@ -576,10 +576,14 @@ function connect_play() {
 		game_cookie = 0
 		document.title = "\xd7 " + game_title
 		document.querySelector("header").classList.add("disconnected")
-		document.getElementById("prompt").textContent = "Disconnected."
+		if (evt.reason)
+			document.getElementById("prompt").textContent = "Disconnected: " + evt.reason
+		else
+			document.getElementById("prompt").textContent = "Disconnected."
 		document.getElementById("actions").replaceChildren()
-		for (let role of roles)
-			role.element.classList.remove("present")
+		if (roles)
+			for (let role of roles)
+				role.element.classList.remove("present")
 		if (view) {
 			view.actions = null
 			on_update()
