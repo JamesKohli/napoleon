@@ -24,8 +24,9 @@ const SITE_NAME = process.env.SITE_NAME || "Localhost"
 const SITE_URL = process.env.SITE_URL || "http://" + HTTP_HOST + ":" + HTTP_PORT
 
 const LIMIT_WAITING_GAMES = (process.env.LIMIT_WAITING_GAMES | 0) || 3
-const LIMIT_OPEN_GAMES = (process.env.LIMIT_OPEN_GAMES | 0) || 5
-const LIMIT_ACTIVE_GAMES = (process.env.LIMIT_ACTIVE_GAMES | 0) || 30
+const LIMIT_OPEN_GAMES = (process.env.LIMIT_OPEN_GAMES | 0) || 4
+const LIMIT_ACTIVE_GAMES_MIN = (process.env.LIMIT_ACTIVE_GAMES_MIN | 0) || 4
+const LIMIT_ACTIVE_GAMES_MAX = (process.env.LIMIT_ACTIVE_GAMES_MAX | 0) || 30
 const LIMIT_TM_QUEUE = (process.env.LIMIT_TM_QUEUE | 0) || 5
 
 const REGEX_MAIL = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/
@@ -1611,13 +1612,24 @@ const SQL_DELETE_PLAYER_ROLE = SQL("DELETE FROM players WHERE game_id=? AND role
 
 const SQL_SELECT_PLAYER_VIEW = SQL("select * from player_view where game_id = ?")
 
-const SQL_COUNT_OPEN_GAMES = SQL(`select count(*) from games where owner_id=? and status=0`).pluck()
+const SQL_COUNT_OPEN_GAMES = SQL(`
+	select count(*) from games where owner_id=? and status=0
+`).pluck()
+
 const SQL_COUNT_ACTIVE_GAMES = SQL(`
 	select count(*) from games
 	where status < 2 and exists (
 		select 1 from players where players.user_id=? and players.game_id=games.game_id
 	)
 `).pluck()
+
+const SQL_COUNT_FINISHED_GAMES = SQL(`
+	select count(*) from games
+	where status > 1 and is_opposed and exists (
+		select 1 from players where players.user_id=? and players.game_id=games.game_id
+	)
+`).pluck()
+
 
 const SQL_SELECT_REMATCH = SQL(`SELECT game_id FROM games WHERE status < ${STATUS_FINISHED} AND notice=?`).pluck()
 const SQL_INSERT_REMATCH = SQL(`
@@ -1754,19 +1766,22 @@ const QUERY_LIST_FINISHED_GAMES_OF_USER = SQL(`
 	`)
 
 function check_create_game_limit(user) {
-	if (user.waiting >= LIMIT_WAITING_GAMES)
-		return "You have too many games waiting!"
+	var limit = check_join_game_limit(user, 1)
+	if (limit)
+		return limit
 	if (SQL_COUNT_OPEN_GAMES.get(user.user_id) >= LIMIT_OPEN_GAMES)
 		return "You have too many open games!"
-	if (SQL_COUNT_ACTIVE_GAMES.get(user.user_id) >= LIMIT_ACTIVE_GAMES)
-		return "You cannot join any more games!"
 	return null
 }
 
-function check_join_game_limit(user) {
+function check_join_game_limit(user, n) {
 	if (user.waiting >= LIMIT_WAITING_GAMES + 1)
 		return "You have too many games waiting!"
-	if (SQL_COUNT_ACTIVE_GAMES.get(user.user_id) >= LIMIT_ACTIVE_GAMES)
+	var finished = SQL_COUNT_FINISHED_GAMES.get(user.user_id)
+	var active = SQL_COUNT_OPEN_GAMES.get(user.user_id)
+	active += SQL_COUNT_ACTIVE_GAMES.get(user.user_id)
+	active += TM_COUNT_QUEUE_GAMES.get(user.user_id)
+	if (active + n > Math.max(LIMIT_ACTIVE_GAMES_MIN, Math.min(LIMIT_ACTIVE_GAMES_MAX, finished)))
 		return "You cannot join any more games!"
 	return null
 }
@@ -2217,7 +2232,7 @@ app.get("/join/:game_id", function (req, res) {
 		whitelist,
 		blacklist,
 		friends,
-		limit: req.user ? check_join_game_limit(req.user) : null,
+		limit: req.user ? check_join_game_limit(req.user, 1) : null,
 		rewind
 	})
 })
@@ -2258,7 +2273,7 @@ function do_join(res, game_id, role, user_id, user_name, is_invite) {
 app.post("/api/join/:game_id/:role", must_be_logged_in, function (req, res) {
 	let game_id = req.params.game_id | 0
 	let role = req.params.role
-	let limit = check_join_game_limit(req.user)
+	let limit = check_join_game_limit(req.user, 1)
 	if (limit)
 		return res.send(limit)
 	do_join(res, game_id, role, req.user.user_id, req.user.name, 0)
@@ -2995,7 +3010,7 @@ const TM_DELETE_QUEUE_INACTIVE = SQL(`
 `)
 
 const TM_SELECT_USER_HAS_PLAYED_TITLE = SQL(`
-	select exists ( select 1 from ratings where user_id=? and title_id=? )
+	select exists ( select 1 from ratings where user_id=? and title_id=? and count >= ? )
 `).pluck()
 
 const TM_SELECT_SEED_IS_OPEN = SQL(`
@@ -3035,8 +3050,12 @@ const TM_COUNT_QUEUE = SQL(`
 	select count(1) from tm_queue where user_id = ?
 `).pluck()
 
+const TM_COUNT_QUEUE_GAMES = SQL(`
+	select sum(round_count) from tm_queue join tm_seeds using(seed_id) where user_id = ?
+`).pluck()
+
 function check_join_seed_limit(user, seed) {
-	let limit = check_join_game_limit(user)
+	let limit = check_join_game_limit(user, seed.round_count)
 	if (limit)
 		return limit
 
@@ -3046,7 +3065,7 @@ function check_join_seed_limit(user, seed) {
 	if (!DEBUG) {
 		if (!SQL_SELECT_USER_VERIFIED.get(user.user_id))
 			return "Verify your mail address to join this tournament."
-		if (!TM_SELECT_USER_HAS_PLAYED_TITLE.get(user.user_id, seed.title_id))
+		if (!TM_SELECT_USER_HAS_PLAYED_TITLE.get(user.user_id, seed.title_id, 2))
 			return "You need to play more before you can join this tournament."
 	}
 
