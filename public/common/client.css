@@ -663,8 +663,8 @@ menu li.disabled:hover img {
 
 #chat_text {
 	--black: darkgray;
-	--gray: gainsboro;
-	--white: whitesmoke;
+	--gray: lightgray;
+	--white: gainsboro;
 	--red: lightpink;
 	--green: lightgreen;
 	--blue: lightblue;
