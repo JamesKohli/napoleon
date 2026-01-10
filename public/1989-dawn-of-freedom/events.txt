@@ -1,0 +1,939 @@
+
+CARD 1 - Legacy of Martial Law*
+# Replace 1 Democratic SP with a Communist SP in Poland and make a Support Check using the Ops value of this card in Poland.
+permanently_remove
+valid_spaces_country_opp 'Poland'
+prompt 'replace 1 Democratic SP in Poland with a Communist SP'
+legacy_of_martial_law
+valid_spaces_country_sc 'Poland'
+prompt 'make a Support Check in Poland'
+1_support_check
+
+
+CARD 2 - Solidarity Legalised*
+# Place a Democratic SP in every uncontrolled Worker and Farmer space in Poland. Allows play of Walesa.
+if !is_auto_resolve(C_SOLIDARITY_LEGALIZED)
+solidarity_legalised_spaces
+prompt 'to every uncontrolled Worker and Farmer space in Poland'
+add_limited_infl 9 1
+endif
+solidarity_legalised
+
+
+CARD 3 - Walesa
+# Place a total of 4 SPs in any spaces(s) in Poland. The Democratic Player may then may Support Checks in Poland using the Ops value of this card. Requires Solidarity Legalized* to be played as event.
+permanently_remove
+valid_spaces_country 'Poland'
+prompt 'any space(s) in Poland'
+add_infl_free 4
+valid_spaces_country_sc 'Poland'
+prompt 'make Support Checks in Poland'
+support_check 2
+
+
+CARD 4 - Michnik
+# Place 3 Democratic SPs in the Polish Intellectuals space.
+permanently_remove
+valid_spaces 'Polish Writers'
+prompt 'the Polish Intellectuals space'
+add_x_infl 3
+
+
+CARD 5 - General strike
+# The Communist Player must discard a held card and roll a die. To end the strike the total of the Ops value and the die roll must exceed 5. The Communist Player must continue discarding cards until the General Strike is over, though he may play a Power Struggle - Card during the strike.
+general_strike
+
+
+CARD 6 - Brought in for Questioning
+# The Democratic Player must randomly discard a card. If it is a Communist event it takes place immediately.
+if !is_auto_resolve(C_BROUGHT_IN_FOR_QUESTIONING)
+brought_in_for_questioning
+endif
+
+
+CARD 7 - State Run Media*
+# Remove four Democratic SPs, no more than 2 per space.
+permanently_remove
+valid_spaces_opponent
+remove_limited_opp_infl 4 2
+
+
+CARD 8 - Prudence
+# Opponent -1 Ops for the rest of the turn, to minimum of 1.
+prudence
+
+
+CARD 9 - The Wall*
+# Place in front of the Communist Player. In his next Support Check in Germany cancel drm for any adjacent spaces controlled by the Democratic Player.
+the_wall
+
+
+CARD 10 - Cult of Personality
+# Place 4 Communist SPs in Worker or Farmer spaces in Romania, no more than 2 per space.
+permanently_remove
+if !game.persistent_events.includes(THE_TYRANT_IS_GONE_OCCURRED)
+valid_spaces_country_socio_2 'Romania', 3, 4
+prompt 'Worker or Farmer spaces in Romania, no more than 2 per space'
+add_limited_infl 4 2
+else
+tyrant_block
+endif
+
+
+CARD 11 - Dissident arrested
+# Remove 2 Democratic SPs from any Intellectuals space.
+if !is_auto_resolve(C_DISSIDENT_ARRESTED)
+valid_spaces_opponent_socio 5
+prompt 'any Intellectuals space'
+remove_x_opp_infl 2
+endif
+
+
+CARD 12 - Apparatchicks
+# Place 3 Communist SPs in any Bureaucratic space(s).
+permanently_remove
+valid_spaces_socio 2
+prompt ' to any Bureaucratic space(s)'
+add_infl_free 3
+
+
+CARD 13 - Stasi
+# For the rest this turn the Democratic Player must reveal the card he will play this action round before the Communist plays his card.
+stasi
+
+
+CARD 14 - Gorbachev Charms the West
+# Improve USSR stability by one.  Remove 2 opponent SPs and  make a support check using the Ops value of this card.  May not be held.  May not be played as an Event after Breakaway Baltic Republics. 
+valid_spaces_opponent
+remove_opp_infl 2
+valid_spaces_sc
+prompt 'select a space for the Support Check.'
+1_support_check
+
+
+CARD 15 - Honecker
+# The Communist Player may take any non-Power Struggle - card in the discard pile  and put it in his hand. The Communist Player may take one extra action round  this turn. May not be played as event after Modrow*.
+if !is_auto_resolve(C_HONECKER)
+honecker
+endif
+
+
+CARD 16 - Nomenklatura*
+# Place 3 SPs in any Elite space(s), or remove all Democratic SPs from Elite spaces.
+permanently_remove
+nomenklatura
+
+
+CARD 17 - Roundtable talks
+# Place in front of the Democratic Player. In the next Power Struggle - he draws 2 random Power Struggle - cards from  the Communist player. Then place this card in the discard pile. 
+roundtable_talks
+
+
+CARD 18 - Poszgay Defends the Revolution
+# Place Communist SPs in 4 spaces in Hungary not under Democratic control.
+permanently_remove
+poszgay
+prompt 'to 4 spaces in Hungary not under Democratic control'
+add_limited_infl 4 1
+
+
+CARD 19 - Papal vist
+#  Place 3 SPs in any Catholic Church space. 
+permanently_remove
+valid_spaces 'Catholic Church, Poland', 'Catholic Church, Czechoslovakia', 'Catholic Church, Hungary'
+prompt 'any Catholic Church space'
+add_x_infl 3
+
+
+CARD 20 - Deutsche Marks*
+# Democratic Player gives the Communist Player his highest Ops value card. If a Communist event it takes place immediately, otherwise use the Ops value of the card without triggering the event.
+permanently_remove
+if !is_auto_resolve(C_DEUTSCHE_MARKS)
+deutsche_marks
+endif
+
+
+CARD 21 - Common European Home
+# Play together with opponent's event to cancel the event taking place. Opponent earns 1 VP if this card played for Ops.
+common_european_home
+
+
+CARD 22 - Power Struggle - Poland
+# Support=3, Dominance=6, Control=9 Power(Communist only)= 3 x the number of times played. +1 for each Battleground space. May not be held. Remove only if Democrat takes power.
+power_struggle
+
+
+CARD 23 - Power Struggle - Hungary
+# Support=1, Dominance=2, Control=4 Power(Communist only)= 1 x the number of times played. +1 for each Battleground space. May not be held. Remove only if Democrat takes power.
+power_struggle
+
+
+CARD 24 - St Nicolas Church
+# Place sufficient Democratic SPs in the Lutheran Church space for Democratic control. Allows play of The Monday Demonstrations.
+if !check_dem_control(S_LUTHERAN_CHURCH)
+valid_spaces 'Lutheran Church'
+prompt 'the Lutheran Church'
+take_control_prep 1
+endif
+st_nicholas_church
+
+
+CARD 25 - Perestroika
+# +1 Ops value for cards played by the Communist for the rest of turn.
+perestroika
+
+
+CARD 26 - Helsinki Final Act*
+# +1 VP for every Support Check die roll by the Communist Player in Student or Intellectual spaces the rest of the game. 
+helsinki_final_act
+
+
+CARD 27 - Consumerism
+# Remove a Communist SP from a Worker space and make one Support Check in a Worker space in the same country using the Ops value of this card.
+valid_spaces_opponent_socio 4
+prompt ' from a Worker space'
+remove_opp_infl 1
+valid_spaces_opponent_socio 4
+active_country
+prompt `make a Support Check in a Worker space in ${country_name(game.vm_active_country)}.`
+1_support_check
+
+
+CARD 28 - Factory Party Cells
+# Remove 3 Democratic SP from Worker spaces, no more than 2 per space.
+valid_spaces_opponent_socio 4
+prompt ' from Worker spaces'
+remove_limited_opp_infl 3 2
+
+
+CARD 29 - Jan Palach Week*
+# Place 6 Democratic SPs in the Charles University space.
+permanently_remove
+valid_spaces 'Charles University'
+prompt 'the Charles University space'
+add_x_infl 6
+
+
+CARD 30 - Tear Gas
+# Place in front of the Communist Player. In his next Support Check roll in a Student space he receives a +1 drm, then remove this card from the game.
+tear_gas
+
+
+CARD 31 - Intelligentsia
+# Place 4 Democratic SPs in Intellectual spaces, no more than 2 per space.
+valid_spaces_socio 5
+prompt 'Intellectual spaces, no more than 2 per space'
+add_limited_infl 4 2
+
+
+CARD 32 - Peasant Parties*
+# Place 4 Communist SPs in Farmer spaces, no more than 2 per space.
+permanently_remove
+valid_spaces_socio 3
+prompt 'Farmer spaces, no more than 2 per space'
+add_limited_infl 4 2
+
+
+CARD 33 - Sajudis*
+# +1 VP.  Reduce USSR stability by 1. Place sufficient Democratic support in any Minorities space for control. Allows play of The Baltic Way. 
+sajudis
+if !is_auto_resolve(C_SAJUDIS)
+sajudis_check
+prompt 'any Minorities space'
+take_control_prep 1
+endif
+
+
+
+CARD 34 - Fidesz*
+# Place 5 Democratic SPs in Hungary Student space.
+permanently_remove
+valid_spaces 'Eotvos Lorand University'
+prompt 'the Hungary Student space'
+add_x_infl 5
+
+
+CARD 35 - Heal our Bleeding Wounds*
+# If played in Early Year, -3 VPs.  If played in Mid Year, -1 VP. If played in Late Year, +3 VPs.
+permanently_remove
+heal_our_bleeding_wounds
+
+
+CARD 36 - Dash for the West*
+# Roll a die. If the die roll exceeds the number of Communist controlled spaces in Germany, +1 VP and select any Blue Event with asterisk(*) from the discard pile. The event occurs immediately. 
+permanently_remove
+prompt 'Dash for the West: Select any Democratic Event with an asterix(*) from the discard pile. Event occurs immediately'
+dash_for_the_west
+
+
+CARD 37 - Nagy Reburied*
+# Remove all Communist SPs from the Hungary Elite space. Then place 4 Communist SPs in Hungary, no more than 2 per space.
+permanently_remove
+nagy_reburied
+prompt 'the Hungary Elite space'
+remove_all_infl 1
+valid_spaces_country 'Hungary'
+prompt 'Hungary, no more than 2 per space'
+add_limited_infl 4 2
+
+
+CARD 38 - July Concept
+#  Place 3 Communist SPs in Bulgaria 
+permanently_remove
+valid_spaces_country 'Bulgaria'
+prompt 'Bulgaria'
+add_infl_free 3
+
+
+CARD 39 - Eco-Glasnost*
+# Place 4 Democratic SPs in Ruse.
+valid_spaces 'Ruse'
+prompt 'Ruse'
+add_x_infl 4
+eco_glasnost
+
+
+CARD 40 - Hungarian Democratic Forum
+# Place 3 Democratic SPs in Hungary and make one Support Check in Hungary.
+permanently_remove
+valid_spaces_country 'Hungary'
+prompt  'Hungary'
+add_infl_free 3
+valid_spaces_country_sc 'Hungary'
+prompt 'make a Support Check in Hungary'
+1_support_check
+
+
+CARD 41 - Ceausescu*
+# Remove 3 Democratic SPs in Romania and make a Support Check in Romania using the Ops value of this card. If the Democratic Player has any SPs in spaces adjacent to Cluj  at the end of this action round remove 1 Communist SP from Bucharest. May not be played as an event after The Tyrant is Gone.
+permanently_remove
+if game.persistent_events.includes(THE_TYRANT_IS_GONE_OCCURRED)
+tyrant_block
+return
+else
+if game.persistent_events.includes(C_CEAUSESCU)
+prompt 'you must remove 1 SP from Bucureşti'
+ceausescu
+return
+else
+if !is_auto_resolve(C_CEAUSESCU)
+ceausescu_prep
+valid_spaces_country_opp 'Romania'
+prompt ' from Romania'
+remove_opp_infl 3
+valid_spaces_country_sc 'Romania'
+prompt 'make a Support Check in Romania'
+1_support_check
+endif
+
+
+CARD 42 - Power Struggle - East Germany
+# Support=3, Dominance=6 , Control=9, Power(Communist only)= 3 X the number of times played. +1 for each Battleground space. May not be held. Remove only if Democrat takes power.
+power_struggle
+
+
+CARD 43 - Power Struggle - Bulgaria
+# Support=2, Dominance=3 , Control=5, Power(Communist only)= 1 X the number of times played. +1 for each Battleground space. May not be held. Remove only if Democrat takes power. 
+power_struggle
+
+
+CARD 44 - Inflationary Currency
+# Target any Country where your opponent has Power. Place 2 SPs and make 1 Support Check in the Country using the Ops value of this card. Your opponent may cancel the Support Check by discarding a 3 Ops value card.
+permanently_remove
+inflationary_currency
+valid_spaces_country_opp
+prompt ()=>` from ${country_name(game.vm_active_country)}`
+remove_opp_infl 2
+inflationary_currency_discard
+if !discarded_card()
+valid_spaces_country_sc
+prompt `make a Support Check in ${country_name(game.vm_active_country)}` 
+1_support_check
+endif
+
+
+CARD 45 - Soviet Troop Withdrawals*
+# The Democratic Player may remove 5 Communist SPs from Eastern Europe, no more than 2 per space.
+permanently_remove
+valid_spaces_region_opp 'Eastern Europe'
+prompt ' from Eastern Europe'
+remove_limited_opp_infl 5 2
+
+
+CARD 46 - Goodbye Lenin!*
+# The Communist Player must reveal all his events with title written in red. The Democrat may exchange this card for any of them with the event occurring immediately, or he may play this card for Operations.
+permanently_remove
+goodbye_lenin
+
+
+CARD 47 - Bulgarian Turks Expelled*
+# -2 VP. Remove any Democratic SPs in Razgrad.
+permanently_remove
+bulgarian_turks_expelled
+if !is_auto_resolve(C_BULGARIAN_TURKS_EXPELLED)
+valid_spaces 'Razgrad'
+prompt 'Razgrad'
+remove_all_infl 1
+endif
+
+
+CARD 48 - We are the People!*
+# The Democrat can move up to 4 SPs from the Lutheran Church space to any spaces in Germany, no more than 2 per space.  The Communist may no longer make Support Checks in Leipzig.
+if !is_auto_resolve(C_WE_ARE_THE_PEOPLE)
+we_are_the_people
+endif
+
+
+CARD 49 - Foreign Currency Debt Burden*
+# The Democrat designates 1 country in Eastern Europe.  For the rest of this turn the Communist has a -2 modifier for support checks in this country.
+foreign_currency_debt_burden
+log `Communist cannot make Support Checks in ${country_name(game.foreign_currency_debt_burden)} for the rest of the turn`
+
+
+CARD 50 - The Sinatra Doctrine*
+# +1 Ops value for cards played by the Democratic Player the rest of this turn.
+the_sinatra_doctrine
+
+
+CARD 51 - 40th Anniversary Celebration*
+# Place 2 Communist SPs in Germany. If Communist is ahead add 4 SPs. Then subtract 1 VP.
+permanently_remove
+40th_anniversary_celebration
+valid_spaces_country 'East_Germany'
+prompt 'East Germany'
+add_infl_free
+40th_anniversary_celebration_vp
+
+
+CARD 52 - Normalization
+# Remove all Democratic SPs from the Czechoslovakia Elite and Bureaucrat Spaces.
+permanently_remove
+if !is_auto_resolve(C_NORMALIZATION)
+normalization
+prompt 'the Czechoslovakia Elite and Bureaucrat Spaces'
+remove_all_infl 2
+endif
+
+
+CARD 53 - Li Peng*
+# +1 modifier to all Communist Tiananmen Square track attempts for the rest of the game
+li_peng
+
+
+CARD 54 - The Crowd Turns Against Ceausescu*
+# Place in front of the Democratic Player. After the players draw cards for the next Power Struggle - in Romania, the Democratic Player draws the top 15 cards from the Power Struggle - Deck. He may use the total rank of any Rally in the Square Cards for Operations, then these 15 cards are discarded before the Power Struggle - is resolved. Allows play of The Tyrant is Gone*.
+the_crowd_turns_against_ceausescu
+
+
+CARD 55 - Power Struggle - Czechoslovakia
+# Support=2 Dominance=4 , Control=7, Power(Communist only)= 2 X the number of times played. +1 for each Battleground space. May not be held. Remove only if Democrat takes power.
+power_struggle
+
+
+CARD 56 - Foreign Television
+# Remove 4 Communist SPs no more than 2 per space.
+permanently_remove
+foreign_television
+remove_limited_opp_infl 4 2
+
+
+CARD 57 - Central Committee Reshuffle*
+# Place 3 Communist SPs in any Country where the Communist holds Power.
+permanently_remove
+central_committee_reshuffle
+prompt `${country_name(game.vm_active_country)}`
+add_infl_free 3
+
+
+CARD 58 - Austria-Hungary Border Reopened*
+# +1 Ops value if all Ops are spent in Germany for the rest of this turn.
+austria_hungary_border_reopened
+
+
+CARD 59 - Grenztruppen*
+# -1 modifier for Democratic Support Checks in East Germany the rest of this turn.
+grenztruppen
+
+
+CARD 60 - Toxic Waste*
+# Add 3 Democratic SPs in any Worker space(s).
+permanently_remove
+valid_spaces_socio 4
+prompt 'any Worker space(s)'
+add_infl_free 3
+
+
+CARD 61 - The Monday Demonstrations*
+# Place sufficient SPs in the Lutheran Church Space and Leipzig for Democratic control. Then the Democratic Player may make FIVE support checks in Germany using the Ops value of this card. Requires play of St. Nicholas Church as an event.
+permanently_remove
+the_monday_demonstrations
+prompt 'the Lutheran Church Space and Leipzig'
+take_control_prep 2
+valid_spaces_country_sc 'East_Germany'
+prompt 'make 5 Support Checks in East Germany'
+support_check 5
+
+
+CARD 62 - Yakovlev Counsels Gorbachev*
+# Place in front of the Democratic Player. The Democrat receives a +1 drm to his roll if he wins the next Power Struggle. Then remove this card from the game. 
+yakovlev_counsels_gorbachev
+
+
+CARD 63 - Genscher*
+# Cancels +1 Ops cost to place Democratic SPs in Communist controlled spaces in Germany the rest of this turn.
+genscher
+
+
+CARD 64 - Legacy of 1968*
+# The Democratic Player may place 1 SP in all spaces in Czechoslovakia not controlled by the Communist Player
+permanently_remove
+legacy_of_1968
+prompt 'all spaces in Czechoslovakia not controlled by the Communist Player'
+add_limited_infl 11 1
+
+
+CARD 65 - Presidential Visit*
+# The Communist's hand size is reduced to 7 next turn.
+presidential_visit
+
+
+CARD 66 - New Forum
+# Place a  Democratic SP in 3 spaces in Germany
+permanently_remove
+valid_spaces_country 'East_Germany'
+prompt '3 spaces in East Germany'   
+add_limited_infl 3 1
+
+
+CARD 67 - Reformer Rehabilitated*
+# If you are ahead on the Tiananmen Square track, draw any card in the discard pile. The event takes place immediately. 
+prompt 'Reformer Rehabilitated: Choose any non-scoring card in the discard pile. Event takes place immediately'
+reformer_rehabilitated
+
+
+CARD 68 - Klaus and Komarek*
+# Remove 2 Communist SPs and add 2 Democratic SPs in Prague. 
+permanently_remove
+klaus_and_komarek
+prompt 'Praha'
+remove_x_opp_infl 2
+valid_spaces 'Praha'
+add_x_infl 2
+
+
+CARD 69 - Systematization*
+# The Communist player may eliminate 1 space in Romania. Any Democratic SPs are eliminated. Communist SPs are relocated to Bucharest. The connections to the destroyed space are considered to pass through and connect the adjacent spaces directly.
+if !game.persistent_events.includes(THE_TYRANT_IS_GONE_OCCURRED)
+valid_spaces_country 'Romania'
+systematization
+else
+tyrant_block
+endif
+
+
+CARD 70 - Securitate*
+# The Democrat must reveal his battlecards at the start of the Power Struggles in Romania. This event remains in effect until cancelled by Army Backs the Revolution event.
+if !game.persistent_events.includes(C_ARMY_BACKS_REVOLUTION)
+securitate
+else
+army_block
+endif
+
+
+CARD 71 - Kiss of Death*
+# The Communist Player must randomly discard a card. If it is neutral or Democratic it takes place immediately. 
+permanently_remove
+if is_auto_resolve(C_KISS_OF_DEATH)
+log 'Communist has no cards to discard.'
+else
+kiss_of_death
+endif
+
+
+CARD 72 - Peasant Parties Revolt
+# Place in front of the Democratic Player. In the next Power Struggle - if the Democratic Player controls a farm space,  he draws 1 Battlecard at random from the Communist hand and places it in his own.  Then remove this card from the game. 
+peasant_parties_revolt
+
+
+CARD 73 - Laszlo Tokes*
+#  Place 1 Democratic SP in Timisoara and Harghita/Covasna. The Democratic may then place SPs or make Support Check rolls in Romania using the Ops value of this card.  Allows play of Massacre in Timisoara. 
+laszlo_tokes_prep
+valid_spaces 'Timisoara', 'Harghita/Covasna'
+prompt 'in Timişoara and Harghita/Covasna'
+add_limited_infl 2 1
+laszlo_tokes
+if game.phase === 3
+prompt ' in Romania'
+add_infl
+else
+prompt 'make 2 Support Checks in Romania'
+support_check 2
+endif
+
+
+CARD 74 - FRG Embassies
+# +1 for Democratic Support Checks in Eastern Europe the rest of this turn.
+frg_embassies
+
+
+CARD 75 - Exit Visas*
+# The Democratic Player may discard any cards in his hand and draw new cards from the deck. 
+permanently_remove
+if !is_auto_resolve(C_EXIT_VISAS)
+exit_visas
+endif
+
+
+CARD 76 - Warsaw Pact Summit
+# The Warsaw Pact holds a summit in Bucharest. The Communist player chooses who dominates the summit, the hardliners or the reformers. The Communist may either make 2 Support Checks with a +2 drm against Student and intellectual spaces, or place 4 SPs in spaces with no influence that are not controlled by the Democratic player.
+permanently_remove
+warsaw_pact_summit
+if game.phase === 3
+prompt ' spaces with no Democratic SPs' 
+add_infl_free 4
+else
+prompt 'Select a Student or Intellectual space'
+vm_valid_spaces_socio_2_sc SOCIO_STUDENT SOCIO_INTELLECTUALS
+support_check_modified 2 2
+endif
+
+
+CARD 77 - Samizdat
+# The Democratic Player can put a card in his hand aside for next turn and draw a replacement card from the deck.
+permanently_remove
+if !is_auto_resolve(C_SAMIZDAT)
+samizdat
+endif
+
+
+CARD 78 - Workers Revolt
+# Choose any Worker space in a country where your opponent has Power. Roll a die. Revolt is successful 4-6. If successful replace your opponent's SPs with your own. -1 drm for every space your opponent controls adjacent to the target space.
+workers_revolt
+
+
+CARD 79 - The Third Way*
+# -2 VP. Place 3 Communist SPs in the German writers space.
+permanently_remove
+the_third_way
+valid_spaces 'German Writers'
+prompt 'the East German Writers space'
+add_x_infl 3
+
+
+CARD 80 - Nepotism*
+# Roll a die. 1-2: Place 4 Communist SPs in Worker spaces in the Balkans. 3-4: Place 3 SPs in Worker spaces in the Balkans.  5-6: Place 1 SP in a Worker space in the Balkans.
+permanently_remove
+nepotism
+valid_spaces_region_socio 'Balkans', 4
+prompt 'Worker spaces in the Balkans'
+add_infl_free
+
+
+CARD 81 - The Baltic Way*
+# +2 VP.  Reduce USSR stability by 1. Place sufficient Democratic SPs in any Minorities space for control. .Requires play of Sajudis. Allows play of Breakaway Baltic Republics. 
+the_baltic_way_prep
+if !is_auto_resolve(C_THE_BALTIC_WAY)
+the_baltic_way
+prompt 'any Minorities space'
+take_control_prep 1
+endif
+
+
+CARD 82 - Spitzel*
+# Remove 2 Democratic SPs in Germany. 
+permanently_remove
+if !is_auto_resolve(C_SPITZEL)
+valid_spaces_country_opp 'East_Germany'
+prompt ' from East Germany'
+remove_opp_infl 2
+endif
+
+
+CARD 83 - Modrow*
+# Roll a die. If the die roll exceeds the number of Democratically controlled spaces in Germany, then place 4 Communist SPs in Germany, no more than 2 per space. 
+modrow
+valid_spaces_country 'East_Germany'
+prompt 'East Germany, no more than 2 per space'
+add_limited_infl 4 2
+
+
+CARD 84 - Breakaway Baltic Republics*
+# +3 VPs. Reduce USSR stability by 2. Place sufficient Democratic SPs in any Minorities space for control. Cancels the effect of Gorbachev Charms the West for the rest of the game. Make 1 Support Check using the Ops value of this card. Requires play of The Baltic Way as an event. 
+breakaway_baltic_republics
+prompt 'any Minorities space'
+take_control_prep 1
+valid_spaces_sc
+prompt 'select a space for the Support Check'
+1_support_check
+
+
+CARD 85 - Tank Column/Tank Man*
+# Advance 1 space on the Tiananmen Square track.
+permanently_remove
+tank_column
+
+
+CARD 86 - The Wall Must Go!*
+# Reduce USSR stability by 1. The Democratic Player attempts to tear down the Berlin Wall. Each player rolls a die and adds the number of spaces in Germany they control.  Higher total wins. This is best 2 out of 3. If successful +3 VPs and the Communist must remove 3 SPs from Germany.  
+the_wall_must_go
+remove_infl 3
+
+
+CARD 87 - Kohl Proposes Reunification*
+#  +2 VP. The Democratic Player may place SPs or make Support Checks using the Ops value of this card  if The Wall Must Go! has been played as an event successfully.   
+permanently_remove
+kohl_proposes_reunification_prep
+if !is_auto_resolve(C_KOHL_PROPOSES_REUNIFICATION)
+kohl_proposes_reunification
+else
+log `C${C_THE_WALL_MUST_GO} has not been successfully played for the event.`
+endif
+
+
+CARD 88 - Adamec*
+# Roll a die. On a 4-6 add 4 Communist SPs in Czechoslovakia, no more than 2 per space. -1 drm for every Worker or Farmer space in Czechoslovakia that is controlled by the Democratic Player.
+permanently_remove
+adamec
+valid_spaces_country 'Czechoslovakia'
+prompt 'Czechoslovakia'
+add_limited_infl 4 2
+
+
+CARD 89 - Domino Theory*
+# If the Democrat holds Power in at least 2 counties,  he may retrieve any Power Struggle - card from the discard pile and play it immediately as an event. The Democrat receives a -1 drm to his dice rolls for this Power Struggle.
+permanently_remove
+if !is_auto_resolve(C_DOMINO_THEORY)
+prompt 'Domino Theory: Choose a Power Struggle card to play from the discard pile'
+domino_theory
+else
+domino_theory_pass
+endif
+
+
+CARD 90 - Civic Forum*
+#  +1 VP.  Place 4 SPs in Czechoslovakia. The Democratic Player may make Support Checks in Czechoslovakia using the Ops value of this card if the Czech Writers space is Democratically controlled.
+permanently_remove
+civic_forum_prep
+valid_spaces_country 'Czechoslovakia'
+prompt 'Czechoslovakia'
+add_infl_free 4
+civic_forum
+valid_spaces_country_sc 'Czechoslovakia'
+prompt 'Select a space in Czechoslovakia'
+support_check 2
+
+
+CARD 91 - My First Banana*
+# Remove 2 Communist SPs and make two Support Checks in Germany using the Ops value of this card.
+permanently_remove
+if !is_auto_resolve(C_MY_FIRST_BANANA)
+valid_spaces_country_opp 'East_Germany'
+prompt ' from East Germany'
+remove_opp_infl 2
+valid_spaces_country_sc 'East_Germany'
+prompt 'select a space in East Germany'
+support_check 2
+endif
+
+
+CARD 92 - Betrayal
+# Choose any Orthodox Church space. Replace all Democratic SPs with Communist SPs.
+permanently_remove
+if !is_auto_resolve(C_BETRAYAL)
+prompt 'choose any Orthodox Church space. Replace all Democratic SPs with Communist SPs'
+betrayal
+endif
+
+
+CARD 93 - Shock Therapy*
+# Target country must be one where the Communist has been toppled from power. Successful 3-6. -1 for every Communist Worker or Farmer space. +2 VPs and place 3 SPs in the country
+permanently_remove
+shock_therapy
+valid_spaces_country
+prompt ` ${country_name(game.vm_active_country)}`
+add_infl_free 3
+
+
+CARD 94 - Union of Democratic Forces*
+# Remove 4 Communist SPs from Bulgaria. Democratic Player may make Support Checks in Bulgaria using the Ops value of this card if the Bulgarian writers space is Democratically controlled. 
+permanently_remove
+if !is_auto_resolve(C_UNION_OF_DEMOCRATIC_FORCES)
+valid_spaces_country_opp 'Bulgaria'
+prompt ' from Bulgaria'
+remove_limited_opp_infl 4 2
+valid_spaces_country_sc 'Bulgaria'
+prompt 'Make 2 Support Checks in Bulgaria'
+support_check 2
+endif
+
+
+CARD 95 - Power Struggle - Romania
+# Support=2, Dominance=4, Control=6 Power(Communist only)= 2 x the number of times played. +1 for each Battleground space. May not be held. Remove only if Democrat takes power.
+power_struggle
+
+
+CARD 96 - The Chinese Solution*
+# Can only take place if the Communist has reached the Protesters Massacred space on the Tiananmen Square track. The Communist may choose 1 country where he retains Power and conduct 5 Support Checks with a +3 modifier, but suffers a penalty of +3 VPs.
+permanently_remove
+the_chinese_solution
+valid_spaces_country_sc
+prompt `make 5 Support Checks in ${country_name(game.vm_active_country)}`
+support_check_modified 5 3
+
+
+CARD 97 - The Tyrant is Gone*
+# Remove 4 Communist SPs from the Romanian Elite Space. The Democrat announces where the Ceausescus flee,  choosing a space with no Democratic SPs. If the Democratic Player gains control of the space before the end of the game the Ceausescus are captured, +2 VP.  If not they escape, -2 VP. Requires play of The Crowd Turns Against Ceausescu
+if game.persistent_events.includes(THE_CROWD_TURNS_AGAINST_CEAUSESCU_OCCURRED)
+cluj_check
+prompt 'the Romanian Elite Space'
+remove_x_opp_infl 4
+the_tyrant_is_gone
+else
+the_tyrant_is_gone_prep
+endif
+
+
+CARD 98 - Politburo Intrigue*
+# Remove 3 Democratic SPs in Bulgaria, no more than 2 per space. Then make one Support Check in Bulgaria, using the Ops value of this card.
+permanently_remove
+if !is_auto_resolve(C_POLITBURO_INTRIGUE)
+valid_spaces_country_opp 'Bulgaria'
+prompt ' from Bulgaria'
+remove_limited_opp_infl 3 2
+valid_spaces_country_sc 'Bulgaria'
+prompt 'make a Support Check in Bulgaria'
+1_support_check
+endif
+
+
+CARD 99 - Ligachev*
+# -3 VP if the Democrat does not play Gorbachev Charms the West for the event his next action round. -3 VPs take effect as soon as the Democrat plays his card but before the effect of the Democrat's card takes place.
+ligachev
+
+
+CARD 100 - Stand Fast*
+# -1 to opponent Support Checks in spaces you control for the rest of this turn.
+stand_fast
+
+
+CARD 101 - Elena*
+# Add 2 SPs to the Romania Elite Space. -1 drm for Democratic Player for Support Checks in Romania the rest of this turn.  No longer playable after The Tyrant is  Gone 
+if !game.persistent_events.includes(THE_TYRANT_IS_GONE_OCCURRED)
+valid_spaces 'Cluj-Napoca'
+prompt 'the Romania Elite Space'
+add_x_infl 2
+elena
+else
+tyrant_block
+permanently_remove
+endif
+
+
+CARD 102 - National Salvation Front*
+#  Place in front of the Communist Player. In the next Power Struggle in the Balkans, the Communist player may draw two Battlecards at random from the Democratic Player and place them in the Communist Player's hand. Then remove this card from the game. 
+national_salvation_front
+
+
+CARD 103 - Government Resigns*
+# Remove all Communist SPs from any uncontrolled Elite space.
+permanently_remove
+if !is_auto_resolve(C_GOVERNMENT_RESIGNS)
+government_resigns
+prompt 'any uncontrolled Elite space'
+remove_all_infl 1
+endif
+
+
+
+CARD 104 - New Year's Eve Party*
+# The Communist may declare the game will end at the end of this turn. If the Communist has power in 4 or more countires -3 VPs, if 3 or fewer countries +3 VPs. This takes place immediately. At the end of the turn the Democrat may choose 1 country where the Communist still holds Power to have a final power struggle. There is no final scoring.
+new_years_eve_party
+
+
+CARD 105 - Public Against Violence*
+# Place 2 Democratic SPs each in Kosice and Presov. Make one Support Check in Bratislava using the Ops value of this card.
+permanently_remove
+valid_spaces 'Kosice'
+prompt 'Košice'
+add_x_infl 2
+valid_spaces 'Presov'
+prompt 'Prešov'
+add_x_infl 2
+public_against_violence
+prompt 'Make a Support Check in Bratislava'
+support_check_modified 1 2
+
+
+CARD 106 - Social Democratic Platform Adopted*
+# Play as an event in a Country where the Democrat has Power. Add 2 SPs and make 1 Support Check in the Country using the Ops value of this card. 
+permanently_remove
+social_democratic_platform_adopted
+valid_spaces_country
+prompt `${country_name(game.vm_active_country)}`
+add_infl_free 2
+valid_spaces_country_sc
+prompt `make a Support Check in ${country_name(game.vm_active_country)}`
+1_support_check
+
+
+CARD 107 - Massacre in Timisoara*
+# Communist Player makes Support Checks in Romania using the Ops value of this card with +2 drm. Requires play of Lazslo Tokes.
+permanently_remove
+if !game.persistent_events.includes(THE_TYRANT_IS_GONE_OCCURRED)
+massacre_in_timisoara
+valid_spaces_country_sc 'Romania'
+prompt 'Make Support Checks in Romania'
+support_check_modified 2 2
+else
+tyrant_block
+endif
+
+
+CARD 108 - Army Backs Revolution*
+# Place in front of the Democratic Player. Cancels effects of Securitate* event.
+army_backs_revolution
+
+
+CARD 109 - Kremlin Coup*
+# Can only take place if Breakaway Baltic Republics has been played as an event. -3 VPs. In all countries where the Communist retains Power, place sufficient SPs in Elite space for Communist control, then make a support check against the bureaucratic space with a +1 modifier, even if there are no Democratic SPs in the space.
+permanently_remove
+kremlin_coup
+
+
+CARD 110 - Malta Summit*
+# Roll a die. The summit is successful 4-6. If successful, +3VPs and remove 5 Communist SPs from elite space(s). The Democrat receives a modifier based on the USSR Stability Track: +1 if Sajudis +2 if The Baltic Way +3 if Breakaway Baltic Republics Not playable for the event after Kremlin Coup.
+permanently_remove
+malta_summit
+prompt ' from Elite spaces'
+remove_opp_infl 5
+
+
+#// ============= TIANANMEN SQUARE TRACK AWARDS ====================
+CARD 203 - Tiananmen Square space 3 award
+tst_3
+
+CARD 204 - Tiananmen Square space 4 award
+valid_spaces_opponent
+tst_4
+
+CARD 206 - Tiananmen Square space 6
+valid_spaces_sc
+tst_6
+
+CARD 208 - Tiananmen Square space 8 event
+tst_8
+
+#// ============= POWER STRUGGLE WILDCARDS =========================
+
+
+CARD 349 - Support Falters
+support_falters
+
+CARD 350 - Support Surges
+support_surges
+
+CARD 351 - Scare Tactics
+scare_tactics
+valid_spaces_country_opp
+prompt ()=>` from ${country_name(game.vm_active_country)}`
+remove_opp_infl 1

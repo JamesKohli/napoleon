@@ -1,0 +1,547 @@
+main { background-color: slategray; }
+
+body.Democrat header.your_turn { background-color: hsl(206, 85%, 75%); }
+body.Communist header.your_turn { background-color: hsl(355, 70%, 75%); }
+
+#role_Democrat { background-color: hsl(206, 80%, 80%); }
+#role_Communist { background-color: hsl(355, 70%, 80%); }
+
+#chat_text .Democrat { background-color: var(--blue) }
+#chat_text .Communist { background-color: var(--red) }
+
+/* LOG */
+
+#log { font-variant-numeric: tabular-nums; }
+
+#log .die {
+	display: inline-block;
+	vertical-align: -3px;
+	width: 12px;
+	height: 12px;
+	background-size: 600% 100%;
+	background-repeat: no-repeat;
+	background-image: url(images/die_black_pips.svg);
+	background-color: #fff;
+	border: 1px solid #444;
+}
+
+#log .d0 { background-position: -100% 0 }
+#log .d1 { background-position: 0% 0; }
+#log .d2 { background-position: 20% 0; }
+#log .d3 { background-position: 40% 0; }
+#log .d4 { background-position: 60% 0; }
+#log .d5 { background-position: 80% 0; }
+#log .d6 { background-position: 100% 0; }
+
+#log .h1 { font-weight: bold; padding-top:2px; padding-bottom:2px; text-align: center; }
+#log .h2 { padding-top:2px; padding-bottom:2px; text-align: center; }
+#log .h3 { text-align: center; }
+#log .h4 { font-weight: bold; }
+#log .h5 { text-decoration: underline; }
+
+#log { background-color: floralwhite }
+#log .h1 { background-color: tan }
+#log .h2 { background-color: wheat }
+#log .h3 { background-color: wheat }
+
+#log .h1, .h2, .h3 {
+	font-variant-caps: small-caps;
+	border-top: 1px solid black;
+	border-bottom: 1px solid black;
+}
+#log .h2.dem {
+	background-color: hsl(206, 85%, 80%);
+	border-top: 1px solid hsl(206, 85%, 25%);
+	border-bottom: 1px solid hsl(206, 85%, 25%);
+}
+#log .h2.com {
+	background-color: hsl(355, 70%, 80%);
+	border-top: 1px solid hsl(355, 70%, 25%);
+	border-bottom: 1px solid hsl(355, 70%, 25%);
+}
+#log .group.dem { background-color: hsl(206, 85%, 90%); }
+#log .group.com { background-color: hsl(355, 70%, 90%); }
+#log .group.both { background-color: gainsboro; }
+
+#log .group { margin: 0 6px; }
+#log .header.group.dem { background-color: hsl(206, 85%, 85%); }
+#log .header.group.com { background-color: hsl(355, 70%, 85%); }
+#log .header.group.both { background-color: hsl(0, 0%, 80%); }
+
+#log div { padding-left: 20px; text-indent: -12px; }
+#log div.i { padding-left: 32px; text-indent: -12px; }
+#log div.ii { padding-left: 44px; text-indent: -12px; }
+
+#log .card_name { font-style: italic; }
+#log .card_name:hover { text-decoration: underline; }
+#log .space_tip:hover { cursor: pointer; text-decoration: underline; }
+
+#log .number {
+	display: inline-block;
+	margin: 0;
+	text-indent: 0;
+	text-align: center;
+	width: 12px;
+	height: 12px;
+	line-height: 12px;
+	border: 1px solid #444;
+}
+
+#log .number.d_tst { background-color: hsl(206, 85%, 80%); }
+#log .number.c_tst { background-color: hsl(355, 70%, 80%); }
+
+/* MAP */
+
+#mapwrap {
+	width: 1650px;
+	height: 2550px;
+}
+
+#map {
+	width: 1650px;
+	height: 2550px;
+	background-size: 1650px 2550px;
+	box-shadow: 0px 1px 10px #0008;
+}
+
+#map { background-image: url("map75.avif") }
+@media (min-resolution: 97dpi) {
+	#map { background-image: url("map150.avif") }
+}
+
+@media (max-width: 800px) {
+	.panel {
+		min-width: calc(1650px - 8px);
+	}
+	#tooltip {
+		inset: 0;
+		margin: auto;
+	}
+}
+
+/* SPACES */
+
+.space {
+	position: absolute;
+	box-sizing: border-box;
+	border: 4px solid transparent;
+}
+
+.space.action {
+	border-color: white;
+	box-shadow: 0 0 0 1px black, inset 0 0 0 1px black;
+}
+
+.space.East_Germany.action { border-color: white; }
+.space.Poland.action { border-color: yellow; }
+.space.Czechoslovakia.action { border-color: lightgreen; }
+.space.Hungary.action { border-color: gold; }
+.space.Romania.action { border-color: pink; }
+.space.Bulgaria.action { border-color: palegreen; }
+
+.space.selected {
+	border-color: aqua;
+	box-shadow: 0 0 0 1px black, inset 0 0 0 1px black;
+}
+
+.space.tip {
+	border-color: lime;
+	box-shadow: 0 0 0 1px black, inset 0 0 0 1px black;
+}
+
+.space.systematization {
+	background-color: #faebd7cc;
+	border-color: antiquewhite;
+}
+
+/* MARKERS */
+
+/* node tools/gencolors.js */
+.marker { background-color: #ffffff; border-color: #eeeeee #8a8a8a #8a8a8a #eeeeee; box-shadow: 0 0 0 1px #323232, 1px 2px 4px #0008; }
+.demInfl.ctl { background-color: #c4e2f6; border-color: #e6ffff #8ca8bb #8ca8bb #e6ffff; box-shadow: 0 0 0 1px #274050, 1px 2px 4px #0008; }
+.comInfl.ctl { background-color: #c1272d; border-color: #e74e4c #9c0009 #9c0009 #e74e4c; box-shadow: 0 0 0 1px #520000, 1px 2px 4px #0008; }
+#marker_action_round.dem { background-color: #147fc0; border-color: #44a3e6 #005c9b #005c9b #44a3e6; box-shadow: 0 0 0 1px #001a54, 1px 2px 4px #0008; }
+#marker_action_round.com { background-color: #c1272d; border-color: #e74e4c #9c0009 #9c0009 #e74e4c; box-shadow: 0 0 0 1px #520000, 1px 2px 4px #0008; }
+#marker_vp, #marker_turn { background-color: #fadb04; border-color: #ffff51 #c0a100 #c0a100 #ffff51; box-shadow: 0 0 0 1px #563600, 1px 2px 4px #0008; }
+#marker_com_tst { background-color: #f26649; border-color: #ff9273 #c2391c #c2391c #ff9273; box-shadow: 0 0 0 1px #640000, 1px 2px 4px #0008; }
+#marker_dem_tst { background-color: #c4e2f4; border-color: #e6ffff #8ca8ba #8ca8ba #e6ffff; box-shadow: 0 0 0 1px #27404f, 1px 2px 4px #0008; }
+
+.box {
+	position: absolute;
+	border: solid 1px black;
+	height: 15px;
+	width: 100px;
+}
+
+.box.d_pres { background: linear-gradient(to right, rgba(0, 0, 255, 0.75) 0%, rgba(0, 0, 255, 0.75) 20%, transparent 20%, transparent 100%); }
+
+.box.c_pres { background: linear-gradient(to right, transparent 0%, transparent 80%,rgba(255, 0, 0, 0.75) 80%, rgba(255, 0, 0, 0.75) 100%); }
+
+.box.c_pres.d_pres { background: linear-gradient(to right, rgba(0, 0, 255, 0.75) 0%, rgba(0, 0, 255, 0.75) 20%, transparent 20%, transparent 80%, rgba(255, 0, 0, 0.75) 80%,rgba(255,0,0,0.75) 100%); }
+
+.box.d_pres.d_dom { background: linear-gradient(to right, rgba(0, 0, 255, 0.75) 0%, rgba(0, 0, 255, 0.75) 50%, transparent 50%); }
+
+.box.d_pres.d_dom.c_pres { background: linear-gradient(to right, rgba(0, 0, 255, 0.75) 0%, rgba(0, 0, 255, 0.75) 50%, transparent 50%, transparent 80%,  rgba(255, 0, 0, 0.75) 80%, rgba(255, 0, 0, 0.75) 100%); }
+
+.box.d_pres.d_ctrl { background: linear-gradient(to right, rgba(0, 0, 255, 0.75) 0%, rgba(0, 0, 255, 0.75) 80%, transparent 80%); }
+
+.box.d_pres.d_ctrl.c_pres { background: linear-gradient(to right, rgba(0, 0, 255, 0.75) 0%, rgba(0, 0, 255, 0.75) 80%, rgba(255, 0, 0, 0.75) 80%), rgba(255, 0, 0, 0.75) 100%; }
+
+.box.c_pres.c_dom { background: linear-gradient(to right, transparent 50%, rgba(255, 0, 0, 0.75) 50%, rgba(255, 0, 0, 0.75) 100%); }
+
+.box.d_pres.c_pres.c_dom { background: linear-gradient(to right, rgba(0, 0, 255, 0.75) 0%, rgba(0, 0, 255, 0.75) 20%, transparent 20%, transparent 50%, rgba(255, 0, 0, 0.75) 50%, rgba(255, 0, 0, 0.75) 100%); }
+
+.box.c_pres.c_ctrl { background: linear-gradient(to right, transparent 20%, rgba(255, 0, 0, 0.75) 20%, rgba(255, 0, 0, 0.75) 100%); }
+
+.box.d_pres.c_pres.c_ctrl { background: linear-gradient(to right, rgba(0, 0, 255, 0.75) 0%, rgba(0, 0, 255, 0.75) 20%, transparent 20%, rgba(255, 0, 0, 0.75) 20%, rgba(255, 0, 0, 0.75) 100%); }
+
+#event_reminder_list {
+	position: absolute;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 5px;
+	top: 1650px;
+	left: 600px;
+	width: 200px;
+}
+
+.marker {
+	position: absolute;
+	pointer-events: none;
+	width: 45px;
+	height: 45px;
+	border: 2px solid;
+	border-color: #eee #bbb #bbb #eee;
+	box-shadow: 0 0 0 1px #444;
+	transition-property: top, left;
+	transition-duration: 700ms;
+	transition-timing-function: ease;
+}
+
+.demInfl { background-color: #fff; }
+.comInfl { background-color: #fff; }
+.demInfl.ctl { background-color: #147fc0; }
+.comInfl.ctl { background-color: #c1272d; }
+
+.demInfl.v1 { background-image: url(markers75/di1.png) }
+.demInfl.v2 { background-image: url(markers75/di2.png) }
+.demInfl.v3 { background-image: url(markers75/di3.png) }
+.demInfl.v4 { background-image: url(markers75/di4.png) }
+.demInfl.v5 { background-image: url(markers75/di5.png) }
+.demInfl.v6 { background-image: url(markers75/di6.png) }
+.demInfl.v7 { background-image: url(markers75/di7.png) }
+.demInfl.v8 { background-image: url(markers75/di8.png) }
+.demInfl.ctl.v1 { background-image: url(markers75/dc1.png) }
+.demInfl.ctl.v2 { background-image: url(markers75/dc2.png) }
+.demInfl.ctl.v3 { background-image: url(markers75/dc3.png) }
+.demInfl.ctl.v4 { background-image: url(markers75/dc4.png) }
+.demInfl.ctl.v5 { background-image: url(markers75/dc5.png) }
+.demInfl.ctl.v6 { background-image: url(markers75/dc6.png) }
+.demInfl.ctl.v7 { background-image: url(markers75/dc7.png) }
+.demInfl.ctl.v8 { background-image: url(markers75/dc8.png) }
+
+.comInfl.v1 { background-image: url(markers75/ci1.png) }
+.comInfl.v2 { background-image: url(markers75/ci2.png) }
+.comInfl.v3 { background-image: url(markers75/ci3.png) }
+.comInfl.v4 { background-image: url(markers75/ci4.png) }
+.comInfl.v5 { background-image: url(markers75/ci5.png) }
+.comInfl.v6 { background-image: url(markers75/ci6.png) }
+.comInfl.v7 { background-image: url(markers75/ci7.png) }
+.comInfl.v8 { background-image: url(markers75/ci8.png) }
+.comInfl.ctl.v1 { background-image: url(markers75/cc1.png) }
+.comInfl.ctl.v2 { background-image: url(markers75/cc2.png) }
+.comInfl.ctl.v3 { background-image: url(markers75/cc3.png) }
+.comInfl.ctl.v4 { background-image: url(markers75/cc4.png) }
+.comInfl.ctl.v5 { background-image: url(markers75/cc5.png) }
+.comInfl.ctl.v6 { background-image: url(markers75/cc6.png) }
+.comInfl.ctl.v7 { background-image: url(markers75/cc7.png) }
+.comInfl.ctl.v8 { background-image: url(markers75/cc8.png) }
+
+#marker_turn { background-image: url(markers75/turn.png) }
+#marker_action_round.dem { background-image: url(markers75/action_round_blue.png) }
+#marker_action_round.com { background-image: url(markers75/action_round_red.png) }
+#marker_stability_track { background-image: url(markers75/ussr_stability_track.png) }
+#marker_dem_tst { background-image: url(markers75/ts_blue.png) }
+#marker_com_tst { background-image: url(markers75/ts_red.png) }
+#marker_vp { background-image: url(markers75/vp.png) }
+
+/* EVENT MARKERS */
+
+.marker.aside {
+	position: static;
+}
+
+#event_2 { background-image: url(markers75/event_solidarity_legalized.png) }
+#event_9 { background-image: url(markers75/event_the_wall.png) }
+#event_15 { background-image: url(markers75/event_honecker.png) }
+#event_24 { background-image: url(markers75/event_st_nicholas.png) }
+#event_26 { background-image: url(markers75/event_helsinki.png) }
+#event_39 { background-image: url(markers75/event_eco_glasnost.png) }
+#event_48 { background-image: url(markers75/event_we_are_the_people.png) }
+#event_49 { background-image: url(markers75/event_foreign_currency.png) }
+#event_53 { background-image: url(markers75/event_li_peng.png) }
+#event_58 { background-image: url(markers75/event_austria_hungary.png) }
+#event_59 { background-image: url(markers75/event_grenz_truppen.png) }
+#event_65 { background-image: url(markers75/event_pres_visit.png) }
+#event_69 { background-image: url(markers75/event_systematization.png) }
+#event_70 { background-image: url(markers75/event_securitate.png) }
+#event_73 { background-image: url(markers75/event_laszlo_tokes.png) }
+#event_97 { background-image: url(markers75/event_tyrant.png) }
+#event_100 { background-image: url(markers75/event_stand_fast.png) }
+#event_101 { background-image: url(markers75/event_elena.png) }
+#event_104 { background-image: url(markers75/event_nye_party.png) }
+
+/* Solidarity legalized */
+#event_2 { top: 265px; left: 778px; }
+
+/* The Wall */
+#event_9 { top: 175px; left: 216px; }
+
+/* CARD PANELS */
+
+.panel {
+	background-color: #607080;
+	max-width: 1650px;
+	margin: 24px auto;
+}
+
+.panel_header {
+	background-color: #506070;
+	color: white;
+	font-weight: bold;
+	padding: 3px;
+	text-align: center;
+}
+
+.panel_body {
+	margin-top: 3px;
+	display: flex;
+	flex-wrap: wrap;
+	padding: 16px;
+	gap: 16px;
+	min-height: 350px;
+}
+
+.panel_body.power {
+	min-height: 263px;
+}
+
+.panel.autohide:has(.panel_body:empty) {
+	display: none;
+}
+
+#discard_header, #removed_header {
+	background-color: hsl(210,15%,38%);
+}
+#discard_panel, #removed_panel {
+	background-image: repeating-linear-gradient(135deg,
+		hsl(210,15%,33%),
+		hsl(210,15%,33%) 60px,
+		hsl(210,15%,30%) 60px,
+		hsl(210,15%,30%) 120px
+	)
+}
+
+
+/* CARD IMAGES */
+
+#tooltip {
+	position: fixed;
+	pointer-events: none;
+	z-index: 600;
+	right: 240px;
+	top: 60px;
+}
+
+.card {
+	background-size: cover;
+	background-repeat: no-repeat;
+	background-color: #fffde9;
+	width: 250px;
+	height: 350px;
+	border-radius: 16px;
+	box-shadow: 0 0 0 1px #444, 1px 2px 4px #0004;
+}
+
+.power_card {
+	background-color: #093a5b;
+	width: 188px;
+	height: 263px;
+	border-radius: 12px;
+}
+
+.card.action {
+	box-shadow: 0 0 0 1px #444, 0 0 0 4px white;
+}
+
+.card.selected {
+	box-shadow: 0 0 0 1px #444, 0 0 0 4px yellow;
+}
+
+.card.event_0 { background-image: url(cards100/event_back.avif) }
+.card.event_1 { background-image: url(cards100/event_1.avif) }
+.card.event_2 { background-image: url(cards100/event_2.avif) }
+.card.event_3 { background-image: url(cards100/event_3.avif) }
+.card.event_4 { background-image: url(cards100/event_4.avif) }
+.card.event_5 { background-image: url(cards100/event_5.avif) }
+.card.event_6 { background-image: url(cards100/event_6.avif) }
+.card.event_7 { background-image: url(cards100/event_7.avif) }
+.card.event_8 { background-image: url(cards100/event_8.avif) }
+.card.event_9 { background-image: url(cards100/event_9.avif) }
+.card.event_10 { background-image: url(cards100/event_10.avif) }
+.card.event_11 { background-image: url(cards100/event_11.avif) }
+.card.event_12 { background-image: url(cards100/event_12.avif) }
+.card.event_13 { background-image: url(cards100/event_13.avif) }
+.card.event_14 { background-image: url(cards100/event_14.avif) }
+.card.event_15 { background-image: url(cards100/event_15.avif) }
+.card.event_16 { background-image: url(cards100/event_16.avif) }
+.card.event_17 { background-image: url(cards100/event_17.avif) }
+.card.event_18 { background-image: url(cards100/event_18.avif) }
+.card.event_19 { background-image: url(cards100/event_19.avif) }
+.card.event_20 { background-image: url(cards100/event_20.avif) }
+.card.event_21 { background-image: url(cards100/event_21.avif) }
+.card.event_22 { background-image: url(cards100/event_22.avif) }
+.card.event_23 { background-image: url(cards100/event_23.avif) }
+.card.event_24 { background-image: url(cards100/event_24.avif) }
+.card.event_25 { background-image: url(cards100/event_25.avif) }
+.card.event_26 { background-image: url(cards100/event_26.avif) }
+.card.event_27 { background-image: url(cards100/event_27.avif) }
+.card.event_28 { background-image: url(cards100/event_28.avif) }
+.card.event_29 { background-image: url(cards100/event_29.avif) }
+.card.event_30 { background-image: url(cards100/event_30.avif) }
+.card.event_31 { background-image: url(cards100/event_31.avif) }
+.card.event_32 { background-image: url(cards100/event_32.avif) }
+.card.event_33 { background-image: url(cards100/event_33.avif) }
+.card.event_34 { background-image: url(cards100/event_34.avif) }
+.card.event_35 { background-image: url(cards100/event_35.avif) }
+.card.event_36 { background-image: url(cards100/event_36.avif) }
+.card.event_37 { background-image: url(cards100/event_37.avif) }
+.card.event_38 { background-image: url(cards100/event_38.avif) }
+.card.event_39 { background-image: url(cards100/event_39.avif) }
+.card.event_40 { background-image: url(cards100/event_40.avif) }
+.card.event_41 { background-image: url(cards100/event_41.avif) }
+.card.event_42 { background-image: url(cards100/event_42.avif) }
+.card.event_43 { background-image: url(cards100/event_43.avif) }
+.card.event_44 { background-image: url(cards100/event_44.avif) }
+.card.event_45 { background-image: url(cards100/event_45.avif) }
+.card.event_46 { background-image: url(cards100/event_46.avif) }
+.card.event_47 { background-image: url(cards100/event_47.avif) }
+.card.event_48 { background-image: url(cards100/event_48.avif) }
+.card.event_49 { background-image: url(cards100/event_49.avif) }
+.card.event_50 { background-image: url(cards100/event_50.avif) }
+.card.event_51 { background-image: url(cards100/event_51.avif) }
+.card.event_52 { background-image: url(cards100/event_52.avif) }
+.card.event_53 { background-image: url(cards100/event_53.avif) }
+.card.event_54 { background-image: url(cards100/event_54.avif) }
+.card.event_55 { background-image: url(cards100/event_55.avif) }
+.card.event_56 { background-image: url(cards100/event_56.avif) }
+.card.event_57 { background-image: url(cards100/event_57.avif) }
+.card.event_58 { background-image: url(cards100/event_58.avif) }
+.card.event_59 { background-image: url(cards100/event_59.avif) }
+.card.event_60 { background-image: url(cards100/event_60.avif) }
+.card.event_61 { background-image: url(cards100/event_61.avif) }
+.card.event_62 { background-image: url(cards100/event_62.avif) }
+.card.event_63 { background-image: url(cards100/event_63.avif) }
+.card.event_64 { background-image: url(cards100/event_64.avif) }
+.card.event_65 { background-image: url(cards100/event_65.avif) }
+.card.event_66 { background-image: url(cards100/event_66.avif) }
+.card.event_67 { background-image: url(cards100/event_67.avif) }
+.card.event_68 { background-image: url(cards100/event_68.avif) }
+.card.event_69 { background-image: url(cards100/event_69.avif) }
+.card.event_70 { background-image: url(cards100/event_70.avif) }
+.card.event_71 { background-image: url(cards100/event_71.avif) }
+.card.event_72 { background-image: url(cards100/event_72.avif) }
+.card.event_73 { background-image: url(cards100/event_73.avif) }
+.card.event_74 { background-image: url(cards100/event_74.avif) }
+.card.event_75 { background-image: url(cards100/event_75.avif) }
+.card.event_76 { background-image: url(cards100/event_76.avif) }
+.card.event_77 { background-image: url(cards100/event_77.avif) }
+.card.event_78 { background-image: url(cards100/event_78.avif) }
+.card.event_79 { background-image: url(cards100/event_79.avif) }
+.card.event_80 { background-image: url(cards100/event_80.avif) }
+.card.event_81 { background-image: url(cards100/event_81.avif) }
+.card.event_82 { background-image: url(cards100/event_82.avif) }
+.card.event_83 { background-image: url(cards100/event_83.avif) }
+.card.event_84 { background-image: url(cards100/event_84.avif) }
+.card.event_85 { background-image: url(cards100/event_85.avif) }
+.card.event_86 { background-image: url(cards100/event_86.avif) }
+.card.event_87 { background-image: url(cards100/event_87.avif) }
+.card.event_88 { background-image: url(cards100/event_88.avif) }
+.card.event_89 { background-image: url(cards100/event_89.avif) }
+.card.event_90 { background-image: url(cards100/event_90.avif) }
+.card.event_91 { background-image: url(cards100/event_91.avif) }
+.card.event_92 { background-image: url(cards100/event_92.avif) }
+.card.event_93 { background-image: url(cards100/event_93.avif) }
+.card.event_94 { background-image: url(cards100/event_94.avif) }
+.card.event_95 { background-image: url(cards100/event_95.avif) }
+.card.event_96 { background-image: url(cards100/event_96.avif) }
+.card.event_97 { background-image: url(cards100/event_97.avif) }
+.card.event_98 { background-image: url(cards100/event_98.avif) }
+.card.event_99 { background-image: url(cards100/event_99.avif) }
+.card.event_100 { background-image: url(cards100/event_100.avif) }
+.card.event_101 { background-image: url(cards100/event_101.avif) }
+.card.event_102 { background-image: url(cards100/event_102.avif) }
+.card.event_103 { background-image: url(cards100/event_103.avif) }
+.card.event_104 { background-image: url(cards100/event_104.avif) }
+.card.event_105 { background-image: url(cards100/event_105.avif) }
+.card.event_106 { background-image: url(cards100/event_106.avif) }
+.card.event_107 { background-image: url(cards100/event_107.avif) }
+.card.event_108 { background-image: url(cards100/event_108.avif) }
+.card.event_109 { background-image: url(cards100/event_109.avif) }
+.card.event_110 { background-image: url(cards100/event_110.avif) }
+.card.event_800 { background-image: url(cards100/event_8.avif) }
+
+.card.power_0 { background-image: url(cards75/power_back.avif) }
+.card.power_1 { background-image: url(cards75/power_1_6.avif) }
+.card.power_2 { background-image: url(cards75/power_1_6.avif) }
+.card.power_3 { background-image: url(cards75/power_1_6.avif) }
+.card.power_4 { background-image: url(cards75/power_1_6.avif) }
+.card.power_5 { background-image: url(cards75/power_1_6.avif) }
+.card.power_6 { background-image: url(cards75/power_1_6.avif) }
+.card.power_7 { background-image: url(cards75/power_7_8.avif) }
+.card.power_8 { background-image: url(cards75/power_7_8.avif) }
+.card.power_9 { background-image: url(cards75/power_9_10.avif) }
+.card.power_10 { background-image: url(cards75/power_9_10.avif) }
+.card.power_11 { background-image: url(cards75/power_11_14.avif) }
+.card.power_12 { background-image: url(cards75/power_11_14.avif) }
+.card.power_13 { background-image: url(cards75/power_11_14.avif) }
+.card.power_14 { background-image: url(cards75/power_11_14.avif) }
+.card.power_15 { background-image: url(cards75/power_15_18.avif) }
+.card.power_16 { background-image: url(cards75/power_15_18.avif) }
+.card.power_17 { background-image: url(cards75/power_15_18.avif) }
+.card.power_18 { background-image: url(cards75/power_15_18.avif) }
+.card.power_19 { background-image: url(cards75/power_19_20.avif) }
+.card.power_20 { background-image: url(cards75/power_19_20.avif) }
+.card.power_21 { background-image: url(cards75/power_21_22.avif) }
+.card.power_22 { background-image: url(cards75/power_21_22.avif) }
+.card.power_23 { background-image: url(cards75/power_23_26.avif) }
+.card.power_24 { background-image: url(cards75/power_23_26.avif) }
+.card.power_25 { background-image: url(cards75/power_23_26.avif) }
+.card.power_26 { background-image: url(cards75/power_23_26.avif) }
+.card.power_27 { background-image: url(cards75/power_27_30.avif) }
+.card.power_28 { background-image: url(cards75/power_27_30.avif) }
+.card.power_29 { background-image: url(cards75/power_27_30.avif) }
+.card.power_30 { background-image: url(cards75/power_27_30.avif) }
+.card.power_31 { background-image: url(cards75/power_31_33.avif) }
+.card.power_32 { background-image: url(cards75/power_31_33.avif) }
+.card.power_33 { background-image: url(cards75/power_31_33.avif) }
+.card.power_34 { background-image: url(cards75/power_34_36.avif) }
+.card.power_35 { background-image: url(cards75/power_34_36.avif) }
+.card.power_36 { background-image: url(cards75/power_34_36.avif) }
+.card.power_37 { background-image: url(cards75/power_37.avif) }
+.card.power_38 { background-image: url(cards75/power_38.avif) }
+.card.power_39 { background-image: url(cards75/power_39.avif) }
+.card.power_40 { background-image: url(cards75/power_40.avif) }
+.card.power_41 { background-image: url(cards75/power_41.avif) }
+.card.power_42 { background-image: url(cards75/power_42.avif) }
+.card.power_43 { background-image: url(cards75/power_43.avif) }
+.card.power_44 { background-image: url(cards75/power_44.avif) }
+.card.power_45 { background-image: url(cards75/power_45.avif) }
+.card.power_46 { background-image: url(cards75/power_46.avif) }
+.card.power_47 { background-image: url(cards75/power_47.avif) }
+.card.power_48 { background-image: url(cards75/power_48.avif) }
+.card.power_49 { background-image: url(cards75/power_49.avif) }
+.card.power_50 { background-image: url(cards75/power_50.avif) }
+.card.power_51 { background-image: url(cards75/power_51.avif) }
+.card.power_52 { background-image: url(cards75/power_52.avif) }
+.card.power_53 { background-image: url(cards75/power_back.avif) }

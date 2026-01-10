@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<!-- vim:set nowrap: -->
+<html lang="en">
+<head>
+<meta name="viewport" content="width=device-width, height=device-height, user-scalable=no, interactive-widget=resizes-content, viewport-fit=cover">
+<meta name="theme-color" content="#444">
+<meta charset="utf-8">
+<title>1989</title>
+<link rel="icon" href="images/Hammer_and_sickle.svg">
+<link rel="stylesheet" href="/fonts/fonts.css">
+<link rel="stylesheet" href="/common/client.css">
+<link rel="stylesheet" href="play.css">
+<script defer src="/common/client.js"></script>
+<script defer src="data.js"></script>
+<script defer src="play.js"></script>
+</head>
+
+<body>
+
+<div id="tooltip" class="card hide"></div>
+
+<header>
+	<div id="toolbar">
+		<details>
+			<summary><img src="/images/cog.svg"></summary>
+			<menu>
+				<li><a target="_blank" href="/1989-dawn-of-freedom/info/rulebook.html">Rulebook</a>
+				<li><a target="_blank" href="/1989-dawn-of-freedom/info/playbook.html">Playbook</a>
+				<li><a target="_blank" href="/1989-dawn-of-freedom/info/reference.html">Player Aid Card</a>
+				<li class="separator">
+				<li><a target="_blank" href="/1989-dawn-of-freedom/info/cards.html">Card Gallery</a>
+			</menu>
+		</details>
+		<button onclick="toggle_pieces()"><img src="/images/earth-africa-europe.svg"></button>
+		<details>
+			<summary><img src="images/all-seeing-eye.svg"></summary>
+			<menu>
+				<li id="show_removed_menu" onclick="toggle_removed()">Show/hide removed events
+				<li id="show_discard_menu" onclick="toggle_discard()">Show/hide discard
+			</menu>
+		</details>
+	</div>
+</header>
+
+<aside>
+	<div id="roles"></div>
+	<div id="turn_info"></div>
+	<div id="log"></div>
+</aside>
+
+<main>
+
+<div id="mapwrap">
+<div id="map">
+	<div id="spaces"></div>
+	<div id="markers">
+		<div id="marker_turn" class="marker" style="left: 600px; top: 79px;"></div>
+		<div id="marker_action_round" class="marker dem" style="left: 655px; top: 140px;"></div>
+		<div id="marker_stability_track" class="marker" style="left: 1380px; top: 1080px;"></div>
+		<div id="marker_dem_tst" class="marker" style="left: 12px; top: 2117px;"></div>
+		<div id="marker_com_tst" class="marker" style="left: 12px; top: 2246px;"></div>
+		<div id="marker_vp" class="marker" style="left: 846px; top: 2425px;"></div>
+
+		<!-- PERMANENT EVENT MARKERS ON THE BOARD -->
+		<div id="event_reminder_list"></div>
+	</div>
+</div>
+</div>
+
+<div id="played_card_panel" class="panel">
+	<div id="played_card_header" class="panel_header">Played Card</div>
+	<div id="played_card" class="panel_body"></div>
+</div>
+
+<div id="ceausescu_panel" class="autohide panel">
+	<div id="ceausescu_header" class="panel_header">The Crowd Turns Against Ceausescu</div>
+	<div id="ceausescu_hand" class="panel_body power"></div>
+</div>
+
+<div id="power_panel" class="autohide panel">
+	<div id="power_header" class="panel_header">Power Struggle Hand</div>
+	<div id="power_hand" class="panel_body power"></div>
+</div>
+
+<div id="securitate_panel" class="autohide panel">
+	<div id="securiate_header" class="panel_header">Securitate - Democrat Power Struggle Cards</div>
+	<div id="securitate" class="panel_body"></div>
+</div>
+
+<div id="power_discard_panel" class="autohide panel">
+	<div id="power_discard_header" class="panel_header">Power Struggle Discard</div>
+	<div id="power_discard" class="panel_body power"></div>
+</div>
+
+<div id="hand_panel" class="panel">
+	<div id="hand_header" class="panel_header">Hand</div>
+	<div id="hand" class="panel_body"></div>
+</div>
+
+<!-- OPPONENT HAND -->
+<div id="opp_hand_panel" class="autohide panel">
+	<div id="opp_hand_header" class="panel_header">Opponent Hand</div>
+	<div id="opp_hand" class="panel_body"></div>
+</div>
+
+<!-- SAMIZDAT CARD -->
+<div id="samizdat_panel" class="autohide panel">
+	<div id="samizdat_header" class="panel_header">Samizdat - Set Aside Card</div>
+	<div id="samizdat_card" class="panel_body"></div>
+</div>
+
+<!-- PERSISTENT EVENTS -->
+<div id="persistent_panel" class="panel">
+	<div id="persistent_header" class="panel_header">Persistent Events on the Table</div>
+	<div id="persistent" class="panel_body"></div>
+</div>
+
+<!-- DISCARD -->
+<div id="discard_panel" class="panel hide">
+	<div id="discard_header" class="panel_header">Discard</div>
+	<div id="discard" class="panel_body"></div>
+</div>
+
+<!-- PERMANENTLY REMOVED -->
+<div id="removed_panel" class="panel hide">
+	<div id="removed_header" class="panel_header">Permanently Removed Events</div>
+	<div id="removed" class="panel_body"></div>
+</div>
+
+</main>
+
+<footer id="status"></footer>
+
+</html>

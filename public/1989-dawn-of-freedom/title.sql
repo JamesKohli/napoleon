@@ -1,0 +1,1 @@
+insert or replace into titles ( title_id, title_name, bgg ) values ( '1989-dawn-of-freedom', '1989: Dawn of Freedom', 26997 );

@@ -1,0 +1,208 @@
+@font-face { font-family: "Albert Text"; src: url('fonts/AlbertText-Bold.woff2') format('woff2') }
+
+main {
+	user-select: none;
+	background-color: #666;
+	background-image: url(background.png);
+	box-shadow: inset 0 0 8px #0008;
+}
+
+#role_Red { background-color: hsl(359,100%,75%); }
+#role_Blue { background-color: hsl(220,100%,80%); }
+
+#chat_text .Red { background-color: var(--red) }
+#chat_text .Blue { background-color: var(--blue) }
+
+body.Observer #hand { display: none }
+
+.checked::before { content: "\2714  " }
+.unchecked::before { content: "\2714  "; color: transparent; }
+.action { cursor: pointer; }
+
+/* BOARD */
+
+#map {
+	width: 825px;
+	height: calc(12px + 80px + 12px + 638px + 12px + 80px + 12px + 80px + 12px);
+	margin: 0px auto;
+}
+
+#hand, .court { height: 80px; }
+
+#court1 { top: 12px }
+#board { top: calc(12px + 80px + 12px) }
+#court2 { top: calc(12px + 80px + 12px + 638px + 12px) }
+#hand { top: calc(12px + 80px + 12px + 638px + 12px + 80px + 12px) }
+#mapwrap { height: calc(12px + 80px + 12px + 638px + 12px + 80px + 12px + 80px) }
+
+#board, #hand, .court {
+	box-sizing: border-box;
+	position: absolute;
+	width: 825px;
+	border: 2px solid #0004;
+	border-color: #fff3 #0004 #0004 #fff3;
+	box-shadow: 0 0 0 1px #222, 1px 1px 8px #0008;
+}
+
+
+#board {
+	height: 638px;
+	background-size: 825px 638px;
+	background-position: center;
+	background-image: url(map75.jpg);
+	border-color: #fff8 #2228 #2228 #fff8;
+	background-image: url(map75.jpg)
+}
+
+@media (min-resolution: 97dpi) {
+	#board { background-image: url(map150.jpg) }
+}
+
+#hand { background-color: hsl(0,0%,50%) }
+.red.court { background-color: hsl(359,35%,55%) }
+.blue.court { background-color: hsl(220,35%,55%) }
+
+.court, #hand, #darkness_label {
+	font-family: "Albert Text";
+	padding: 6px 10px;
+	text-align: right;
+	font-size: 20px;
+	color: #0006;
+}
+
+#darkness_label {
+	position: absolute;
+	right: -2px;
+	bottom: -2px;
+	color: #444;
+	text-shadow: 0px -1px 10px white;
+}
+
+#darkness_button {
+	position: absolute;
+	width: 56px;
+	height: 56px;
+	left: 10px;
+	bottom: 10px;
+	z-index: 1;
+}
+
+#darkness_button.action {
+	background-color: #0002;
+	box-shadow: inset 0 0 16px 4px black, 0 0 0 3px white;
+}
+
+.space {
+	position: absolute;
+	box-sizing: border-box;
+}
+
+.space.oval {
+	border-radius: 50%;
+}
+
+.space.action {
+	border: 3px solid white;
+}
+
+/* PIECES */
+
+.token, .tile {
+	position: absolute;
+	box-sizing: border-box;
+	transition-property: top, left, opacity;
+	transition-duration: 500ms;
+	transition-timing-function: ease;
+}
+
+.token {
+	width: 57px;
+	height: 57px;
+	background-size: 57px 57px;
+}
+
+.token.white { background-image: url(images/token_white.svg) }
+.token.red { background-image: url(images/token_red.svg) }
+.token.blue { background-image: url(images/token_blue.svg) }
+
+.token.white.action { background-image: url(images/token_white.svg), url(images/outline_white.svg) }
+.token.red.action { background-image: url(images/token_red.svg), url(images/outline_white.svg) }
+.token.blue.action { background-image: url(images/token_blue.svg), url(images/outline_white.svg) }
+
+.token.white.selected { background-image: url(images/token_white.svg), url(images/outline_yellow.svg) }
+.token.red.selected { background-image: url(images/token_red.svg), url(images/outline_yellow.svg) }
+.token.blue.selected { background-image: url(images/token_blue.svg), url(images/outline_yellow.svg) }
+
+.tile {
+	width: 56px;
+	height: 56px;
+	background-repeat: no-repeat;
+	background-size: 38px 38px;
+	background-position: center;
+	border-width: 2px;
+	border-style: solid;
+	box-shadow: 0 0 0 1px #222, 1px 2px 4px #0008;
+}
+
+.tile.gold { background-image: url(images/gold.png); }
+.tile.blue { background-image: url(images/blue.png); }
+.tile.white { background-image: url(images/white.png); }
+.tile.red { background-image: url(images/red.png); }
+.tile.green { background-image: url(images/green.png); }
+
+.tile.gold { background-color: #ebcf42; border-color: #ffff79 #b49800 #b49800 #ffff79; box-shadow: 0 0 0 1px #220600; }
+.tile.blue { background-color: #1895d8; border-color: #50beff #006eae #006eae #50beff; box-shadow: 0 0 0 1px #000039; }
+.tile.white { background-color: #f0f0f0; border-color: #ffffff #b2b2b2 #b2b2b2 #ffffff; box-shadow: 0 0 0 1px #141414; }
+.tile.red { background-color: #ed0c0c; border-color: #ff4e3f #c10000 #c10000 #ff4e3f; box-shadow: 0 0 0 1px #3d0000; }
+.tile.green { background-color: #426645; border-color: #5d825f #284b2c #284b2c #5d825f; box-shadow: 0 0 0 1px #000600; }
+
+.tile.action {
+	box-shadow: 0 0 0 1px #222, 0 0 0 4px white;
+}
+
+/* LOG */
+
+#log { background-color: whitesmoke }
+
+#log .h1 {
+	margin: 6px 0;
+	padding: 2px 8px;
+	border-top: 1px solid black;
+	border-bottom: 1px solid black;
+	background-color: hsl(0,0%,85%);
+}
+
+#log .h1.x { background-color: hsl(0,0%,85%); }
+#log .h1.r { background-color: hsl(359,85%,85%); }
+#log .h1.b { background-color: hsl(220,85%,85%); }
+
+#log .t, #log .c, #log .o {
+	display: inline-block;
+	vertical-align: -2px;
+	width: 11px;
+	height: 11px;
+	border: 1px solid #222;
+}
+
+#log .c { border-radius: 50%; }
+#log .o { border-radius: 0 0 50% 50%; }
+
+#log .o.secrecy { width: 7px; height: 7px; margin: 2px 2px; border-radius: 0; border-color: white; }
+
+#log .c.white { background-color: hsl(0,0%,94%) }
+#log .c.red { background-color: hsl(359,85%,50%) }
+#log .c.blue { background-color: hsl(220,85%,55%) }
+
+#log .t.gold { background-color: hsl(50,81%,59%); }
+#log .t.blue { background-color: hsl(201,80%,47%); }
+#log .t.white { background-color: hsl(0,0%,94%); }
+#log .t.red { background-color: hsl(0,90%,49%); }
+#log .t.green {  background-color: hsl(125,21%,43%); }
+#log .t.black {  background-color: hsl(0,0%,15%); }
+
+#log .o.secrecy {  background-color: hsl(0,0%,15%); }
+#log .o.gold { background-color: hsl(50,81%,59%); }
+#log .o.blue { background-color: hsl(201,80%,47%); }
+#log .o.white { background-color: hsl(0,0%,94%); }
+#log .o.red { background-color: hsl(0,90%,49%); }
+#log .o.purple { background-color: hsl(296,29%,50%); }
