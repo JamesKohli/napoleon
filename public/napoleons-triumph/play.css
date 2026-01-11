@@ -1,0 +1,303 @@
+/* Napoleon's Triumph - Play Stylesheet */
+
+:root {
+	--french-color: #1a4a7a;
+	--french-light: #2a6aaa;
+	--allied-color: #8a2a2a;
+	--allied-light: #ba4a4a;
+	--gold: #c9a227;
+	--parchment: #f4e4c1;
+}
+
+/* === LAYOUT === */
+
+main {
+	background-color: #2a3a2a;
+}
+
+#map {
+	position: relative;
+	width: 5100px;
+	height: 6600px;
+	background-color: #d4c4a4;
+	background-image: url('map.jpg');
+	background-size: 100% 100%;
+}
+
+#locales {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	pointer-events: none;
+}
+
+#pieces {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	pointer-events: none;
+}
+
+/* === SIDE PANEL === */
+
+#panel {
+	padding: 8px;
+	background: var(--parchment);
+	border-bottom: 1px solid #888;
+}
+
+#morale_track {
+	margin-bottom: 8px;
+}
+
+.track_label {
+	font-weight: bold;
+	font-size: 12px;
+	text-transform: uppercase;
+	margin-bottom: 4px;
+}
+
+.track_row {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 2px 0;
+}
+
+.morale_value {
+	display: inline-block;
+	width: 32px;
+	height: 24px;
+	line-height: 24px;
+	text-align: center;
+	font-weight: bold;
+	border-radius: 4px;
+	color: white;
+}
+
+.morale_value.french {
+	background: var(--french-color);
+}
+
+.morale_value.allied {
+	background: var(--allied-color);
+}
+
+#turn_info {
+	padding: 8px 0;
+	border-top: 1px solid #ccc;
+	border-bottom: 1px solid #ccc;
+	margin: 8px 0;
+	font-size: 13px;
+}
+
+#command_track {
+	font-size: 13px;
+}
+
+#command_track .track_label {
+	margin-bottom: 4px;
+}
+
+/* === PIECES === */
+
+.unit, .commander {
+	position: absolute;
+	pointer-events: auto;
+	cursor: pointer;
+	user-select: none;
+	transition: transform 0.1s;
+}
+
+.unit:hover, .commander:hover {
+	transform: scale(1.1);
+	z-index: 100;
+}
+
+.unit {
+	width: 36px;
+	height: 24px;
+	line-height: 24px;
+	text-align: center;
+	font-weight: bold;
+	font-size: 14px;
+	border-radius: 3px;
+	box-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+}
+
+.unit.french {
+	background: var(--french-color);
+	color: white;
+	border: 2px solid var(--french-light);
+}
+
+.unit.allied {
+	background: var(--allied-color);
+	color: white;
+	border: 2px solid var(--allied-light);
+}
+
+.unit.hidden {
+	background: #666;
+	color: #aaa;
+}
+
+.unit.infantry {
+	border-radius: 3px;
+}
+
+.unit.cavalry {
+	border-radius: 3px 12px 12px 3px;
+}
+
+.unit.artillery {
+	border-radius: 50%;
+	width: 24px;
+}
+
+.unit.guard {
+	border-color: var(--gold);
+	border-width: 3px;
+}
+
+.unit.selected {
+	box-shadow: 0 0 8px 2px yellow;
+}
+
+.commander {
+	width: 28px;
+	height: 28px;
+	line-height: 28px;
+	text-align: center;
+	font-weight: bold;
+	font-size: 12px;
+	border-radius: 50%;
+	box-shadow: 1px 1px 3px rgba(0,0,0,0.6);
+}
+
+.commander.french {
+	background: linear-gradient(135deg, var(--french-light), var(--french-color));
+	color: white;
+	border: 2px solid var(--gold);
+}
+
+.commander.allied {
+	background: linear-gradient(135deg, var(--allied-light), var(--allied-color));
+	color: white;
+	border: 2px solid var(--gold);
+}
+
+.commander.selected {
+	box-shadow: 0 0 8px 2px yellow;
+}
+
+/* === LOCALES === */
+
+.locale {
+	position: absolute;
+	pointer-events: auto;
+	cursor: pointer;
+	opacity: 0;
+	transition: opacity 0.2s;
+}
+
+.locale:hover {
+	opacity: 0.3;
+	background: yellow;
+}
+
+.locale.valid-target {
+	opacity: 0.2;
+	background: lime;
+}
+
+.locale.valid-target:hover {
+	opacity: 0.4;
+}
+
+.locale.selected {
+	opacity: 0.3;
+	background: cyan;
+}
+
+/* === APPROACH MARKERS === */
+
+.approach {
+	position: absolute;
+	pointer-events: auto;
+	cursor: pointer;
+	opacity: 0;
+}
+
+.approach:hover {
+	opacity: 0.4;
+	background: orange;
+}
+
+.approach.valid-target {
+	opacity: 0.3;
+	background: lime;
+}
+
+/* === ACTION DISPLAY === */
+
+.action-highlight {
+	animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+	0%, 100% { opacity: 0.3; }
+	50% { opacity: 0.6; }
+}
+
+/* === COMBAT DISPLAY === */
+
+#combat_display {
+	position: fixed;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	background: var(--parchment);
+	border: 3px solid #654;
+	border-radius: 8px;
+	padding: 16px;
+	box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+	z-index: 1000;
+	min-width: 300px;
+}
+
+#combat_display h3 {
+	margin: 0 0 12px 0;
+	text-align: center;
+	border-bottom: 1px solid #888;
+	padding-bottom: 8px;
+}
+
+.combat_side {
+	margin: 8px 0;
+	padding: 8px;
+	border-radius: 4px;
+}
+
+.combat_side.attacker {
+	background: rgba(100, 150, 100, 0.2);
+}
+
+.combat_side.defender {
+	background: rgba(150, 100, 100, 0.2);
+}
+
+.combat_result {
+	text-align: center;
+	font-weight: bold;
+	font-size: 18px;
+	margin-top: 12px;
+	padding: 8px;
+	background: #333;
+	color: white;
+	border-radius: 4px;
+}
