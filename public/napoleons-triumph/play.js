@@ -54,6 +54,14 @@ function build_map_ui() {
 	// Clear any existing locale overlays
 	e_locales.innerHTML = ""
 
+	// Debug: check if LOCALES is defined
+	console.log("LOCALES defined?", typeof LOCALES !== 'undefined')
+	if (typeof LOCALES === 'undefined') {
+		console.error("LOCALES is not defined! Check that data.js is loaded.")
+		return
+	}
+	console.log("LOCALES has", Object.keys(LOCALES).length, "entries")
+
 	// Create clickable locale overlays
 	for (let id in LOCALES) {
 		let locale = LOCALES[id]
